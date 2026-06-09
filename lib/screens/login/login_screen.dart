@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hango/screens/admin/admin_layout.dart';
 import 'package:hango/screens/trainer/trainer_layout.dart';
+import 'package:hango/screens/learner/learner_layout.dart';
 import 'package:hango/screens/login/forgot_password_screen.dart';
 import 'package:hango/screens/login/sign_up_screen.dart';
 import 'package:hango/theme/app_colors.dart';
@@ -420,9 +421,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 children: [
                   _roleBtn('Learner', Icons.person_outline, Colors.blue, () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Learner Coming Soon!')),
-                    );
+                    _navigateTo(const LearnerLayout());
                   }),
                   const SizedBox(width: 8),
                   _roleBtn(
