@@ -17,9 +17,9 @@ class AppColors {
   static const Color borderDark = Color(0xFFCBD5E1);    // Slate-300
 
   // Sidebar
-  static const Color sidebarBg = Color(0xFF0F172A);     // Slate-900
-  static const Color sidebarItemText = Color(0xFF94A3B8);
-  static const Color sidebarItemSelected = Color(0xFF14B8A6); // Teal-500
+  static const Color sidebarBg = Colors.white;
+  static const Color sidebarItemText = Color(0xFF64748B); // Slate-500
+  static const Color sidebarItemSelected = Color(0xFF3B82F6); // Blue-500
 
   // Status
   static const Color error = Color(0xFFEF4444);

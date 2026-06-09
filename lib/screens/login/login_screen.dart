@@ -80,16 +80,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: 240,
+                          height: 240,
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(24),
                           ),
-                          child: const Icon(
-                            Icons.school_rounded,
-                            size: 44,
-                            color: Colors.white,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.asset(
+                              'assets/images/login.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ).animate().scale(
                           duration: 600.ms,
@@ -101,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 32,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white,
+                                color: const Color.fromARGB(255, 255, 255, 255),
                               ),
                             )
                             .animate()

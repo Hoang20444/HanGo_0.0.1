@@ -2,6 +2,7 @@
 ///
 /// This file contains all design system values including spacing, border radius,
 /// and other constants to ensure consistency across the application.
+library;
 
 class AppSpacing {
   // Spacing scale: 4px base unit

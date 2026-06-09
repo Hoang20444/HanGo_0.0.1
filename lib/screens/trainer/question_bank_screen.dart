@@ -92,45 +92,55 @@ class QuestionBankScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Expanded(
-                        child: SingleChildScrollView(
-                          child: DataTable(
-                            headingRowColor: WidgetStateProperty.all(
-                              AppColors.background,
-                            ),
-                            headingTextStyle: GoogleFonts.inter(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                            ),
-                            dataRowMaxHeight: 64,
-                            dataRowMinHeight: 64,
-                            columns: const [
-                              DataColumn(label: Text('Code')),
-                              DataColumn(label: Text('Content Snippet')),
-                              DataColumn(label: Text('Type')),
-                              DataColumn(label: Text('Last Updated')),
-                              DataColumn(label: Text('Actions')),
-                            ],
-                            rows: [
-                              _buildRow(
-                                'Q-1042',
-                                'What is the synonym of "Ubiquitous"?',
-                                'Single',
-                                'Oct 2, 2023',
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SingleChildScrollView(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                                  child: DataTable(
+                                    headingRowColor: WidgetStateProperty.all(
+                                      AppColors.background,
+                                    ),
+                                    headingTextStyle: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    dataRowMaxHeight: 64,
+                                    dataRowMinHeight: 64,
+                                    columns: const [
+                                      DataColumn(label: Text('Code')),
+                                      DataColumn(label: Text('Content Snippet')),
+                                      DataColumn(label: Text('Type')),
+                                      DataColumn(label: Text('Last Updated')),
+                                      DataColumn(label: Text('Actions')),
+                                    ],
+                                    rows: [
+                                      _buildRow(
+                                        'Q-1042',
+                                        'What is the synonym of "Ubiquitous"?',
+                                        'Single',
+                                        'Oct 2, 2023',
+                                      ),
+                                      _buildRow(
+                                        'Q-1043',
+                                        'Reading Comprehension: Global Warming...',
+                                        'Paragraph',
+                                        'Oct 3, 2023',
+                                      ),
+                                      _buildRow(
+                                        'Q-1044',
+                                        'Fill in the blank: The cat ___ on the mat.',
+                                        'Single',
+                                        'Oct 5, 2023',
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              _buildRow(
-                                'Q-1043',
-                                'Reading Comprehension: Global Warming...',
-                                'Paragraph',
-                                'Oct 3, 2023',
-                              ),
-                              _buildRow(
-                                'Q-1044',
-                                'Fill in the blank: The cat ___ on the mat.',
-                                'Single',
-                                'Oct 5, 2023',
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                       ),
                       const PaginationRow(total: 142, showing: 10),

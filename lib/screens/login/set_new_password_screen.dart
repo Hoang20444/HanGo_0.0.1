@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hango/screens/login/login_screen.dart';
 import 'package:hango/theme/app_colors.dart';
-import 'package:hango/theme/app_design_system.dart';
 
 class SetNewPasswordScreen extends StatefulWidget {
   final String email;

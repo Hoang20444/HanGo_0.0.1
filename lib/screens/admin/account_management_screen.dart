@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hango/theme/app_colors.dart';
 import 'package:hango/theme/app_design_system.dart';
 import 'package:hango/widgets/shared_widgets.dart';
+import 'package:hango/screens/admin/widgets/account_dialogs.dart';
 
 class AccountManagementScreen extends StatefulWidget {
   const AccountManagementScreen({super.key});
@@ -19,16 +20,34 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
 
   final List<Map<String, dynamic>> _trainers = [
     {
-      'name': 'John Doe',
-      'email': 'john.trainer@hango.com',
+      'name': 'Hoang Trong Hieu',
+      'email': 'hieuht@gmail.com',
+      'role': 'Admin',
+      'active': true,
+    },
+    {
+      'name': 'Luong Thi Thanh Thao',
+      'email': 'thaoltt@gmail.com',
       'role': 'Trainer',
       'active': true,
     },
     {
-      'name': 'Sarah Smith',
-      'email': 'sarah.s@hango.com',
+      'name': 'Pham Minh Duc',
+      'email': 'ducpm@gmail.com',
       'role': 'Trainer',
       'active': true,
+    },
+    {
+      'name': 'Nguyen Viet Hoang',
+      'email': 'hoangnv@gmail.com',
+      'role': 'Trainer Lead',
+      'active': false,
+    },
+    {
+      'name': 'Nguyen Thanh Tung',
+      'email': 'tungnt@gmail.com',
+      'role': 'Trainer',
+      'active': false,
     },
   ];
 
@@ -59,8 +78,18 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
     super.dispose();
   }
 
-  void _showUserDetailsDialog() {
-    // Premium dialog implementation...
+  void _showUserDetailsDialog(Map<String, dynamic> user) {
+    showDialog(
+      context: context,
+      builder: (context) => AccountDetailDialog(user: user),
+    );
+  }
+
+  void _showCreateAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const CreateAccountDialog(),
+    );
   }
 
   @override
@@ -73,52 +102,38 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
           PageHeader(
             title: 'Account Management',
             subtitle: 'Manage all users across the platform',
-            actions: [
-              TealButton(
-                label: 'Create User',
-                icon: Icons.add,
-                onPressed: () {},
-              ),
-            ],
           ).animate().fadeIn(duration: 400.ms),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+          // Tabs outside the card
+          Container(
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.border)),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              indicatorColor: AppColors.primary,
+              indicatorWeight: 3,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              tabs: const [
+                Tab(text: 'Trainer'),
+                Tab(text: 'Trainee'),
+              ],
+            ),
+          ).animate().fadeIn(delay: 50.ms, duration: 400.ms),
+          const SizedBox(height: 16),
+          // Tab Views inside Card
           Expanded(
                 child: AppCard(
                   padding: EdgeInsets.zero,
-                  child: Column(
+                  child: TabBarView(
+                    controller: _tabController,
                     children: [
-                      // Tabs
-                      Container(
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: AppColors.border),
-                          ),
-                        ),
-                        child: TabBar(
-                          controller: _tabController,
-                          labelColor: AppColors.primary,
-                          unselectedLabelColor: AppColors.textSecondary,
-                          indicatorColor: AppColors.primary,
-                          indicatorWeight: 3,
-                          labelStyle: GoogleFonts.inter(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          tabs: const [
-                            Tab(text: 'Trainers'),
-                            Tab(text: 'Trainees (Learners)'),
-                          ],
-                        ),
-                      ),
-                      // Tab Views
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildTable(_trainers),
-                            _buildTable(_trainees),
-                          ],
-                        ),
-                      ),
+                      _buildTabContent(_trainers),
+                      _buildTabContent(_trainees),
                     ],
                   ),
                 ),
@@ -131,95 +146,188 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
     );
   }
 
-  Widget _buildTable(List<Map<String, dynamic>> users) {
+  Widget _buildTabContent(List<Map<String, dynamic>> users) {
     return Column(
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(AppColors.background),
-              dataRowMaxHeight: 64,
-              dataRowMinHeight: 64,
-              headingTextStyle: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+        // Search & Create Button
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search by name or email...',
+                      hintStyle: TextStyle(
+                        color: AppColors.textSecondary.withOpacity(0.7),
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.textSecondary,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        borderSide: const BorderSide(color: AppColors.primary),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              columns: const [
-                DataColumn(label: Text('User')),
-                DataColumn(label: Text('Email')),
-                DataColumn(label: Text('Role')),
-                DataColumn(label: Text('Status')),
-                DataColumn(label: Text('Actions')),
-              ],
-              rows: users.map((u) {
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: AppColors.primaryLight.withOpacity(
-                              0.2,
-                            ),
-                            child: Text(
-                              u['name'][0],
-                              style: const TextStyle(
-                                color: AppColors.primaryDark,
+              const SizedBox(width: AppSpacing.lg),
+              TealButton(
+                label: 'Create',
+                icon: Icons.add,
+                onPressed: _showCreateAccountDialog,
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, color: AppColors.border),
+        // Table
+        Expanded(child: _buildTable(users)),
+      ],
+    );
+  }
+
+  Widget _buildTable(List<Map<String, dynamic>> users) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: DataTable(
+                      headingRowColor: WidgetStateProperty.all(
+                        const Color(0xFFF0FDF4),
+                      ), // light mint green
+                      dataRowMaxHeight: 64,
+                      dataRowMinHeight: 64,
+                      headingTextStyle: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        letterSpacing: 0.5,
+                        color: AppColors.textPrimary,
+                      ),
+                      columns: const [
+                        DataColumn(label: Text('NAME')),
+                        DataColumn(label: Text('EMAIL')),
+                        DataColumn(label: Text('ROLE')),
+                        DataColumn(label: Text('ACTIVITY')),
+                        DataColumn(label: Text('ACTION')),
+                      ],
+                      rows: users.map((u) {
+                        return DataRow(
+                          cells: [
+                            DataCell(
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: const Color(
+                                      0xFFDBEAFE,
+                                    ), // light blue
+                                    child: Text(
+                                      u['name']
+                                          .split(' ')
+                                          .map((e) => e.toString()[0])
+                                          .take(2)
+                                          .join()
+                                          .toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Color(0xFF1E40AF), // dark blue
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    u['name'],
+                                    style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            u['name'],
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary,
+                            DataCell(
+                              Text(
+                                u['email'],
+                                style: GoogleFonts.inter(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                            DataCell(
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFFEDE9FE,
+                                  ), // light purple
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  u['role'],
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF6D28D9), // purple
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Switch(
+                                value: u['active'],
+                                onChanged: (val) {
+                                  setState(() {
+                                    u['active'] = val;
+                                  });
+                                },
+                                activeThumbColor: AppColors.surface,
+                                activeTrackColor: AppColors.primary,
+                                inactiveThumbColor: AppColors.surface,
+                                inactiveTrackColor: AppColors.borderDark,
+                              ),
+                            ),
+                            DataCell(
+                              IconButton(
+                                icon: const Icon(Icons.edit, size: 20),
+                                color: AppColors.primary,
+                                onPressed: () => _showUserDetailsDialog(u),
+                                tooltip: 'Edit User',
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
                     ),
-                    DataCell(
-                      Text(
-                        u['email'],
-                        style: GoogleFonts.inter(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    DataCell(
-                      StatusBadge(label: u['role'], color: AppColors.info),
-                    ),
-                    DataCell(
-                      StatusBadge(
-                        label: u['active'] ? 'Active' : 'Inactive',
-                        color: u['active']
-                            ? AppColors.success
-                            : AppColors.error,
-                      ),
-                    ),
-                    DataCell(
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            color: AppColors.textSecondary,
-                            onPressed: _showUserDetailsDialog,
-                            tooltip: 'Edit User',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18),
-                            color: AppColors.error,
-                            onPressed: () {},
-                            tooltip: 'Delete User',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
         PaginationRow(total: users.length, showing: users.length),

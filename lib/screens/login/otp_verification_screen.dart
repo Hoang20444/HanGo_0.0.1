@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hango/screens/login/set_new_password_screen.dart';
 import 'package:hango/theme/app_colors.dart';
-import 'package:hango/theme/app_design_system.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String email;

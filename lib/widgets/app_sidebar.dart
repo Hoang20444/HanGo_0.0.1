@@ -27,16 +27,19 @@ class AppSidebar extends StatelessWidget {
       width: isCompact
           ? AppDimensions.sidebarCollapsedWidth
           : AppDimensions.sidebarWidth,
-      color: AppColors.sidebarBg,
+      decoration: const BoxDecoration(
+        color: AppColors.sidebarBg,
+        border: Border(right: BorderSide(color: AppColors.border)),
+      ),
       child: Column(
         children: [
           // Logo area
           Container(
             padding: EdgeInsets.fromLTRB(
               isCompact ? AppSpacing.sm : AppSpacing.xl,
-              AppSpacing.xl,
+              AppSpacing.sm,
               isCompact ? AppSpacing.sm : AppSpacing.xl,
-              AppSpacing.lg,
+              AppSpacing.sm,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,30 +49,11 @@ class AppSidebar extends StatelessWidget {
                       ? MainAxisAlignment.center
                       : MainAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      width: isCompact ? 34 : 140,
+                      fit: BoxFit.contain,
                     ),
-                    if (!isCompact) ...[
-                      const SizedBox(width: 10),
-                      Text(
-                        'HanGo',
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: AppFontSize.xl,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
                 if (!isCompact) ...[
@@ -77,15 +61,16 @@ class AppSidebar extends StatelessWidget {
                   Text(
                     portalLabel,
                     style: GoogleFonts.inter(
-                      color: AppColors.sidebarItemText,
+                      color: AppColors.textSecondary,
                       fontSize: AppFontSize.sm,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ],
             ),
           ),
-          Container(height: 1, color: Colors.white.withOpacity(0.06)),
+          Container(height: 1, color: AppColors.border),
           SizedBox(height: AppSpacing.md),
           // Nav items
           Expanded(
@@ -107,7 +92,7 @@ class AppSidebar extends StatelessWidget {
             ),
           ),
           // Logout
-          Container(height: 1, color: Colors.white.withOpacity(0.06)),
+          Container(height: 1, color: AppColors.border),
           Padding(
             padding: EdgeInsets.fromLTRB(
               isCompact ? AppSpacing.xs : AppSpacing.md,
@@ -158,7 +143,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
     final color = widget.isLogout
         ? AppColors.error
         : (widget.selected
-              ? AppColors.sidebarItemSelected
+              ? const Color.fromARGB(255, 255, 255, 255)
               : AppColors.sidebarItemText);
 
     return Tooltip(
@@ -171,9 +156,9 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
           margin: EdgeInsets.only(bottom: AppSpacing.xs),
           decoration: BoxDecoration(
             color: widget.selected
-                ? AppColors.sidebarItemSelected.withOpacity(0.12)
+                ? const Color.fromARGB(146, 11, 186, 165).withOpacity(1)
                 : (_hovered
-                      ? Colors.white.withOpacity(0.06)
+                      ? const Color.fromARGB(255, 1, 204, 72).withOpacity(0.08)
                       : Colors.transparent),
             borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
@@ -197,7 +182,12 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                       padding: EdgeInsets.all(AppSpacing.xs),
                       decoration: BoxDecoration(
                         color: widget.selected
-                            ? AppColors.sidebarItemSelected.withOpacity(0.18)
+                            ? const Color.fromARGB(
+                                255,
+                                130,
+                                207,
+                                183,
+                              ).withOpacity(0.18)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(AppRadius.badge),
                       ),
@@ -227,7 +217,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                           width: 4,
                           height: 4,
                           decoration: const BoxDecoration(
-                            color: AppColors.sidebarItemSelected,
+                            color: Color.fromARGB(255, 153, 240, 205),
                             shape: BoxShape.circle,
                           ),
                         ),
