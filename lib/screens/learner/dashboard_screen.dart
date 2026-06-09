@@ -10,194 +10,160 @@ class LearnerDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Greeting
-          _buildGreeting().animate().fadeIn(duration: 400.ms),
-          const SizedBox(height: 28),
-
-          // Stats Row
-          Row(
-                children: [
-                  _statCard(
-                    'Courses Enrolled',
-                    '6',
-                    Icons.menu_book_rounded,
-                    AppColors.primary,
-                  ),
-                  const SizedBox(width: 20),
-                  _statCard(
-                    'Completed',
-                    '3',
-                    Icons.check_circle_rounded,
-                    AppColors.success,
-                  ),
-                  const SizedBox(width: 20),
-                  _statCard(
-                    'Exams Taken',
-                    '12',
-                    Icons.quiz_rounded,
-                    AppColors.info,
-                  ),
-                  const SizedBox(width: 20),
-                  _statCard(
-                    'Avg. Score',
-                    '82%',
-                    Icons.trending_up_rounded,
-                    const Color(0xFF8B5CF6),
-                  ),
-                ],
-              )
-              .animate()
-              .fadeIn(delay: 100.ms, duration: 400.ms)
-              .slideY(begin: 0.05, end: 0),
-          const SizedBox(height: 28),
-
-          // Two-column section
-          Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Continue Learning
-                  Expanded(flex: 3, child: _buildContinueLearning()),
-                  const SizedBox(width: 20),
-                  // Upcoming & Streaks
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      children: [
-                        _buildStudyStreak(),
-                        const SizedBox(height: 20),
-                        _buildUpcomingExams(),
-                      ],
-                    ),
-                  ),
-                ],
-              )
-              .animate()
-              .fadeIn(delay: 200.ms, duration: 400.ms)
-              .slideY(begin: 0.05, end: 0),
-          const SizedBox(height: 28),
-
-          // Recent Activity
-          _buildRecentActivity().animate().fadeIn(
-            delay: 300.ms,
-            duration: 400.ms,
+          // Hero Banner
+          _buildHeroBanner().animate().fadeIn(duration: 400.ms),
+          
+          // Statistics
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 28, 32, 0),
+            child: _buildStatsRow()
+                .animate()
+                .fadeIn(delay: 100.ms, duration: 400.ms)
+                .slideY(begin: 0.05, end: 0),
+          ),
+          
+          // Main Content
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 28, 32, 32),
+            child: Column(
+              children: [
+                // Featured Courses Section
+                _buildFeaturedCoursesSection()
+                    .animate()
+                    .fadeIn(delay: 200.ms, duration: 400.ms)
+                    .slideY(begin: 0.05, end: 0),
+                
+                const SizedBox(height: 36),
+                
+                // Available Exams Section
+                _buildExamsSection()
+                    .animate()
+                    .fadeIn(delay: 300.ms, duration: 400.ms)
+                    .slideY(begin: 0.05, end: 0),
+                
+                const SizedBox(height: 36),
+                
+                // All Courses Grid
+                _buildAllCoursesSection()
+                    .animate()
+                    .fadeIn(delay: 400.ms, duration: 400.ms)
+                    .slideY(begin: 0.05, end: 0),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildGreeting() {
+  Widget _buildHeroBanner() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
         ),
-        borderRadius: BorderRadius.circular(16),
+        image: DecorationImage(
+          image: const AssetImage('assets/images/banner-pattern.png'),
+          opacity: 0.1,
+          fit: BoxFit.cover,
+        ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Good afternoon, Hoang! 👋',
-                  style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'You have 2 lessons left in "Advanced English Grammar". Keep going!',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.85),
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Continue Learning →',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.school_rounded,
-              size: 56,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statCard(String title, String value, IconData icon, Color color) {
-    return Expanded(
-      child: AppCard(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome back, Hoang! 👋',
+                    style: GoogleFonts.inter(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Continue your learning journey and explore new courses. You\'re making great progress!',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.9),
+                      height: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: Text(
+                          'Continue Learning',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () {},
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.explore_rounded),
+                        label: Text(
+                          'Explore New',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(width: 14),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
+            const SizedBox(width: 32),
+            Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 80,
+                  color: Colors.white.withOpacity(0.8),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 22,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),
@@ -205,65 +171,42 @@ class LearnerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContinueLearning() {
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Text(
-              'Continue Learning',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          const Divider(height: 1, color: AppColors.border),
-          _courseProgressItem(
-            'Advanced English Grammar',
-            'Section 3: Relative Clauses',
-            0.72,
-            AppColors.primary,
-          ),
-          _courseProgressItem(
-            'IELTS Reading Mastery',
-            'Lesson 5: Matching Headings',
-            0.45,
-            AppColors.info,
-          ),
-          _courseProgressItem(
-            'Basic Vocabulary',
-            'Chapter 2: Daily Life',
-            0.20,
-            const Color(0xFF8B5CF6),
-          ),
-        ],
-      ),
+  Widget _buildStatsRow() {
+    final stats = [
+      ('6', 'Courses\nEnrolled', Icons.menu_book_rounded, AppColors.primary),
+      ('3', 'Completed\nCourses', Icons.check_circle_rounded, AppColors.success),
+      ('12', 'Exams\nTaken', Icons.quiz_rounded, AppColors.info),
+      ('82%', 'Avg\nScore', Icons.trending_up_rounded, const Color(0xFF8B5CF6)),
+    ];
+
+    return LayoutBuilder(
+      builder: (ctx, constraints) {
+        final isWide = constraints.maxWidth > 900;
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: stats.map((stat) {
+            return SizedBox(
+              width: isWide ? (constraints.maxWidth - 48) / 4 : (constraints.maxWidth - 32) / 2,
+              child: _buildStatCard(stat.$2, stat.$1, stat.$3, stat.$4),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 
-  Widget _courseProgressItem(
-    String title,
-    String lesson,
-    double progress,
-    Color color,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return AppCard(
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.play_circle_fill_rounded, color: color, size: 22),
+            child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -271,45 +214,20 @@ class LearnerDashboardScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  value,
                   style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  lesson,
+                  title,
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          backgroundColor: color.withOpacity(0.1),
-                          valueColor: AlwaysStoppedAnimation<Color>(color),
-                          minHeight: 6,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      '${(progress * 100).toInt()}%',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -319,61 +237,146 @@ class LearnerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStudyStreak() {
+  Widget _buildFeaturedCoursesSection() {
+    final courses = [
+      {
+        'title': 'Advanced English Grammar',
+        'trainer': 'Pham Minh Duc',
+        'progress': 0.72,
+        'lessons': 24,
+        'done': 17,
+        'color': AppColors.primary,
+      },
+      {
+        'title': 'IELTS Reading Mastery',
+        'trainer': 'Luong Thi Thanh Thao',
+        'progress': 0.45,
+        'lessons': 20,
+        'done': 9,
+        'color': AppColors.info,
+      },
+      {
+        'title': 'Basic Vocabulary',
+        'trainer': 'Nguyen Viet Hoang',
+        'progress': 0.20,
+        'lessons': 30,
+        'done': 6,
+        'color': const Color(0xFF8B5CF6),
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Continue Learning',
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Pick up where you left off',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (ctx, constraints) {
+            final cols = constraints.maxWidth > 900 ? 3 : (constraints.maxWidth > 550 ? 2 : 1);
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: cols,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.3,
+              ),
+              itemCount: courses.length,
+              itemBuilder: (_, i) => _buildCourseCard(courses[i]),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCourseCard(Map<String, dynamic> course) {
     return AppCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.local_fire_department_rounded,
-                color: Color(0xFFF97316),
-                size: 24,
+          Container(
+            height: 6,
+            decoration: BoxDecoration(
+              color: course['color'],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Study Streak',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _dayBubble('Mo', true),
-              _dayBubble('Tu', true),
-              _dayBubble('We', true),
-              _dayBubble('Th', true),
-              _dayBubble('Fr', false),
-              _dayBubble('Sa', false),
-              _dayBubble('Su', false),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: RichText(
-              text: TextSpan(
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextSpan(
-                    text: '4 days',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFF97316),
-                    ),
-                  ),
-                  TextSpan(
-                    text: '  streak 🔥',
+                  Text(
+                    course['title'],
                     style: GoogleFonts.inter(
                       fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'by ${course['trainer']}',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
                       color: AppColors.textSecondary,
                     ),
+                  ),
+                  const Spacer(),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: course['progress'],
+                      backgroundColor: course['color'].withOpacity(0.1),
+                      valueColor: AlwaysStoppedAnimation<Color>(course['color']),
+                      minHeight: 6,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${course['done']}/${course['lessons']} lessons',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '${(course['progress'] * 100).toInt()}%',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: course['color'],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -384,171 +387,449 @@ class LearnerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _dayBubble(String day, bool done) {
+  Widget _buildExamsSection() {
+    final exams = [
+      {
+        'title': 'Grammar Final Test',
+        'date': 'Dec 15, 2025',
+        'questions': 50,
+        'duration': '90 mins',
+        'color': AppColors.error,
+      },
+      {
+        'title': 'IELTS Practice #3',
+        'date': 'Dec 20, 2025',
+        'questions': 40,
+        'duration': '120 mins',
+        'color': AppColors.warning,
+      },
+      {
+        'title': 'Vocabulary Quiz',
+        'date': 'Dec 22, 2025',
+        'questions': 30,
+        'duration': '45 mins',
+        'color': AppColors.info,
+      },
+    ];
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: done ? const Color(0xFFF97316) : AppColors.background,
-            shape: BoxShape.circle,
-            border: done ? null : Border.all(color: AppColors.border),
-          ),
-          child: Center(
-            child: done
-                ? const Icon(Icons.check, size: 18, color: Colors.white)
-                : null,
+        Text(
+          'Upcoming Exams',
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          day,
+          'Prepare for and take your exams',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (ctx, constraints) {
+            final cols = constraints.maxWidth > 900 ? 3 : (constraints.maxWidth > 550 ? 2 : 1);
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: cols,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.2,
+              ),
+              itemCount: exams.length,
+              itemBuilder: (_, i) => _buildExamCard(exams[i]),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExamCard(Map<String, dynamic> exam) {
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(color: exam['color'], width: 4),
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.quiz_rounded,
+                    color: exam['color'],
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      exam['title'],
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                exam['date'],
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: exam['color'],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _examInfoBadge(
+                    '${exam['questions']}',
+                    'Questions',
+                    Icons.format_list_numbered_rounded,
+                  ),
+                  _examInfoBadge(
+                    exam['duration'],
+                    'Duration',
+                    Icons.timer_rounded,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 36,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: exam['color'].withOpacity(0.1),
+                    foregroundColor: exam['color'],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Take Exam',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _examInfoBadge(String value, String label, IconData icon) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: AppColors.textSecondary),
+        const SizedBox(height: 2),
+        Text(
+          value,
           style: GoogleFonts.inter(
             fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 9,
             color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildUpcomingExams() {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Upcoming Exams',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 14),
-          _examItem('Grammar Final Test', 'Dec 15, 2025', AppColors.error),
-          const SizedBox(height: 10),
-          _examItem('IELTS Practice #3', 'Dec 20, 2025', AppColors.warning),
-          const SizedBox(height: 10),
-          _examItem('Vocabulary Quiz', 'Dec 22, 2025', AppColors.info),
-        ],
-      ),
-    );
-  }
+  Widget _buildAllCoursesSection() {
+    final allCourses = [
+      {
+        'title': 'Advanced English Grammar',
+        'trainer': 'Pham Minh Duc',
+        'level': 'Advanced',
+        'students': 1250,
+        'rating': 4.8,
+        'color': AppColors.primary,
+        'enrolled': true,
+      },
+      {
+        'title': 'IELTS Reading Mastery',
+        'trainer': 'Luong Thi Thanh Thao',
+        'level': 'Intermediate',
+        'students': 890,
+        'rating': 4.7,
+        'color': AppColors.info,
+        'enrolled': true,
+      },
+      {
+        'title': 'Business English',
+        'trainer': 'Pham Minh Duc',
+        'level': 'Advanced',
+        'students': 650,
+        'rating': 4.9,
+        'color': const Color(0xFFEC4899),
+        'enrolled': false,
+      },
+      {
+        'title': 'Conversational English',
+        'trainer': 'Nguyen Viet Hoang',
+        'level': 'Beginner',
+        'students': 2100,
+        'rating': 4.6,
+        'color': AppColors.success,
+        'enrolled': false,
+      },
+      {
+        'title': 'English Pronunciation',
+        'trainer': 'Pham Minh Duc',
+        'level': 'Beginner',
+        'students': 1560,
+        'rating': 4.8,
+        'color': const Color(0xFF8B5CF6),
+        'enrolled': false,
+      },
+      {
+        'title': 'Writing Skills - Part 1',
+        'trainer': 'Luong Thi Thanh Thao',
+        'level': 'Intermediate',
+        'students': 920,
+        'rating': 4.7,
+        'color': const Color(0xFFF97316),
+        'enrolled': false,
+      },
+    ];
 
-  Widget _examItem(String name, String date, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.15)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.event_note_rounded, size: 18, color: color),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  'Browse All Courses',
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  date,
+                  'Explore and enroll in available courses',
                   style: GoogleFonts.inter(
-                    fontSize: 11,
+                    fontSize: 14,
                     color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primarySurface,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'View All →',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (ctx, constraints) {
+            final cols = constraints.maxWidth > 900 ? 3 : (constraints.maxWidth > 550 ? 2 : 1);
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: cols,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.35,
+              ),
+              itemCount: allCourses.length,
+              itemBuilder: (_, i) => _buildBrowseCourseCard(allCourses[i]),
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildRecentActivity() {
+  Widget _buildBrowseCourseCard(Map<String, dynamic> course) {
+    final bool enrolled = course['enrolled'] ?? false;
+    
     return AppCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Recent Activity',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _activityItem(
-            Icons.check_circle,
-            'Completed "Relative Clauses" lesson',
-            '2 hours ago',
-            AppColors.success,
-          ),
-          _activityItem(
-            Icons.quiz_rounded,
-            'Scored 85% on Vocabulary Quiz #4',
-            'Yesterday',
-            AppColors.info,
-          ),
-          _activityItem(
-            Icons.play_circle_fill,
-            'Started "IELTS Reading Mastery"',
-            '2 days ago',
-            AppColors.primary,
-          ),
-          _activityItem(
-            Icons.emoji_events,
-            'Earned "Grammar Pro" badge',
-            '3 days ago',
-            const Color(0xFFF97316),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _activityItem(IconData icon, String text, String time, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            height: 8,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+              color: course['color'],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
           ),
-          Text(
-            time,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: AppColors.textSecondary,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          course['title'],
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (enrolled)
+                        const Icon(
+                          Icons.verified_rounded,
+                          color: AppColors.success,
+                          size: 18,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'by ${course['trainer']}',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 14,
+                                  color: Color(0xFFF97316),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${course['rating']}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '(${course['students']})',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: course['color'].withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                course['level'],
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: course['color'],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 32,
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: enrolled ? AppColors.success.withOpacity(0.1) : course['color'],
+                        foregroundColor: enrolled ? AppColors.success : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: Text(
+                        enrolled ? 'Enrolled' : 'Enroll Now',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
