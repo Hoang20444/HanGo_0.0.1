@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hango/screens/login/login_screen.dart';
+import 'package:hango/services/api_client.dart';
+import 'package:hango/services/auth_service.dart';
 import 'package:hango/theme/app_colors.dart';
 
 class SetNewPasswordScreen extends StatefulWidget {
@@ -21,10 +23,12 @@ class SetNewPasswordScreen extends StatefulWidget {
 class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _authService = const AuthService();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
   String? _errorMessage;
+  String? _confirmErrorText;
 
   // Password requirements tracking
   bool _hasMinLength = false;
@@ -74,7 +78,10 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
     }
 
     if (!_passwordsMatch) {
-      setState(() => _errorMessage = 'Passwords do not match');
+      setState(() {
+        _errorMessage = null;
+        _confirmErrorText = 'Passwords do not match';
+      });
       return;
     }
 
@@ -83,10 +90,13 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
       _errorMessage = null;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
+    try {
+      await _authService.resetPassword(
+        email: widget.email,
+        otp: widget.otp,
+        newPassword: _passwordCtrl.text,
+      );
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -112,6 +122,34 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
           ],
         ),
       );
+    } on ApiException catch (error) {
+      if (mounted) {
+        final msg = error.message;
+        final lower = (msg ?? '').toLowerCase();
+        final isOldPasswordConflict =
+            lower.contains('old password') ||
+            lower.contains('different') ||
+            lower.contains('already used') ||
+            lower.contains('must be different');
+
+        setState(() {
+          if (isOldPasswordConflict) {
+            _confirmErrorText = msg;
+            _errorMessage = null;
+          } else {
+            _errorMessage = msg;
+            _confirmErrorText = null;
+          }
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Cannot connect to the backend server');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -129,7 +167,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
     return Row(
       children: [
         Expanded(
-          flex: 5,
+          flex: 1,
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -315,6 +353,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
           decoration: InputDecoration(
             hintText: 'Confirm password',
             prefixIcon: const Icon(Icons.lock_outline, size: 20),
+            errorText: _confirmErrorText,
             suffixIcon: IconButton(
               icon: Icon(
                 _obscureConfirm

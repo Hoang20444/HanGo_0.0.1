@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildDesktopLayout() {
     return Row(
       children: [
-        // Left — branding
+        // Left — branding banner
         Expanded(
           flex: 5,
           child: Container(
@@ -73,6 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Positioned(top: -60, left: -60, child: _circle(200, 0.08)),
                 Positioned(bottom: -80, right: -40, child: _circle(280, 0.06)),
                 Positioned(top: 120, right: 60, child: _circle(80, 0.1)),
+
                 // Content
                 Center(
                   child: Padding(
@@ -145,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         // Right — form
         Expanded(
-          flex: 4,
+          flex: 5,
           child: Container(
             color: Colors.white,
             child: Center(
@@ -170,37 +171,11 @@ class _LoginScreenState extends State<LoginScreen> {
       child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              // Logo compact
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.school_rounded,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'HanGo',
-                style: GoogleFonts.inter(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 32),
-              _buildForm(),
-            ],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: _buildForm(),
+            ),
           ),
         ),
       ),
@@ -213,6 +188,27 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // ĐÃ CẬP NHẬT: Thêm ảnh logo.png nguyên bản lên trên đầu chữ Welcome back, xóa text cứng
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Image.asset(
+              'assets/images/logo.png', // Sử dụng tệp logo.png đã bọc trọn gói cả biểu tượng và chữ
+              height: 48, // Chiều cao hợp lý giúp logo trông tinh tế, vừa vặn
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                // Hiển thị fallback icon nếu dự án chưa khai báo đường dẫn trong pubspec.yaml
+                return const Icon(
+                  Icons.school_rounded,
+                  color: AppColors.primary,
+                  size: 40,
+                );
+              },
+            ),
+          ),
+        ),
+
         Text(
           'Welcome back',
           style: GoogleFonts.inter(
@@ -293,7 +289,12 @@ class _LoginScreenState extends State<LoginScreen> {
         SizedBox(
           height: 48,
           child: ElevatedButton(
-            onPressed: () => _navigateTo(const AdminLayout()),
+            onPressed: () {
+              // Chuyển màn hình theo vai trò (dev testing/local)
+              // (Nếu bạn đang bật luồng login thật từ backend thì chỗ này sẽ lấy role từ API)
+              _navigateTo(const AdminLayout());
+            },
+
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(

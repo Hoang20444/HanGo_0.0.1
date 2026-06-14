@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:hango/services/account_service.dart';
+import 'package:hango/services/api_client.dart';
 import 'package:hango/theme/app_colors.dart';
 import 'package:hango/theme/app_design_system.dart';
 import 'package:hango/widgets/shared_widgets.dart';
@@ -14,81 +18,124 @@ class AccountManagementScreen extends StatefulWidget {
       _AccountManagementScreenState();
 }
 
-class _AccountManagementScreenState extends State<AccountManagementScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _AccountManagementScreenState extends State<AccountManagementScreen> {
+  final _accountService = const AccountService();
 
-  final List<Map<String, dynamic>> _trainers = [
-    {
-      'name': 'Hoang Trong Hieu',
-      'email': 'hieuht@gmail.com',
-      'role': 'Admin',
-      'active': true,
-    },
-    {
-      'name': 'Luong Thi Thanh Thao',
-      'email': 'thaoltt@gmail.com',
-      'role': 'Trainer',
-      'active': true,
-    },
-    {
-      'name': 'Pham Minh Duc',
-      'email': 'ducpm@gmail.com',
-      'role': 'Trainer',
-      'active': true,
-    },
-    {
-      'name': 'Nguyen Viet Hoang',
-      'email': 'hoangnv@gmail.com',
-      'role': 'Trainer Lead',
-      'active': false,
-    },
-    {
-      'name': 'Nguyen Thanh Tung',
-      'email': 'tungnt@gmail.com',
-      'role': 'Trainer',
-      'active': false,
-    },
-  ];
+  final _searchCtrl = TextEditingController();
+  final _roleCtrl =
+      TextEditingController(); // not used; keeps layout stable if needed later
 
-  final List<Map<String, dynamic>> _trainees = [
-    {
-      'name': 'Mike Johnson',
-      'email': 'mike.j@example.com',
-      'role': 'Learner',
-      'active': true,
-    },
-    {
-      'name': 'Emma Wilson',
-      'email': 'emma.w@example.com',
-      'role': 'Learner',
-      'active': false,
-    },
-  ];
+  Timer? _debounce;
+
+  String? _selectedRole; // null = ALL
+  List<Account> _accounts = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  static const _roles = ['ALL', 'ADMIN', 'TRAINER', 'LEARNER'];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _searchCtrl.addListener(_onSearchChanged);
+    _loadAccounts(); // initial load (ALL)
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    _roleCtrl.dispose();
     super.dispose();
   }
 
-  void _showUserDetailsDialog(Map<String, dynamic> user) {
-    showDialog(
+  void _onSearchChanged() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      _loadAccounts();
+    });
+  }
+
+  Future<void> _loadAccounts() async {
+    final query = _searchCtrl.text.trim();
+    final role = _selectedRole;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final accounts = await _accountService.list(role: role, query: query);
+      if (mounted) {
+        setState(() => _accounts = accounts);
+      }
+    } on ApiException catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = error.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Cannot connect to the backend server');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _showUserDetailsDialog(Account user) async {
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AccountDetailDialog(user: user),
     );
+    if (result == null) return;
+
+    try {
+      if (result['action'] == 'delete') {
+        await _accountService.delete(user.id);
+      } else {
+        await _accountService.update(user.id, result['payload']);
+      }
+      await _loadAccounts();
+    } on ApiException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Cannot connect to the backend server');
+    }
   }
 
-  void _showCreateAccountDialog() {
-    showDialog(
+  Future<void> _showCreateAccountDialog() async {
+    final payload = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => const CreateAccountDialog(),
+    );
+    if (payload == null) return;
+
+    try {
+      await _accountService.create(payload);
+      await _loadAccounts();
+    } on ApiException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Cannot connect to the backend server');
+    }
+  }
+
+  Future<void> _toggleStatus(Account user, bool active) async {
+    try {
+      await _accountService.updateStatus(user.id, active);
+      await _loadAccounts();
+    } on ApiException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Cannot connect to the backend server');
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
   }
 
@@ -104,38 +151,115 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
             subtitle: 'Manage all users across the platform',
           ).animate().fadeIn(duration: 400.ms),
           const SizedBox(height: 24),
-          // Tabs outside the card
+          // Single toolbar (filter + search + create)
           Container(
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.border)),
             ),
-            child: TabBar(
-              controller: _tabController,
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: AppColors.primary,
-              indicatorWeight: 3,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
-              tabs: const [
-                Tab(text: 'Trainer'),
-                Tab(text: 'Trainee'),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 220,
+                    height: 44,
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedRole ?? 'ALL',
+                      decoration: InputDecoration(
+                        labelText: 'Role',
+                        labelStyle: TextStyle(
+                          color: AppColors.textSecondary.withOpacity(0.85),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 0,
+                        ),
+                      ),
+                      items: _roles
+                          .map(
+                            (r) => DropdownMenuItem(
+                              value: r,
+                              child: Text(r == 'ALL' ? 'All Roles' : r),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        final v = value == null ? 'ALL' : value;
+                        _selectedRole = v == 'ALL' ? null : v;
+                        _loadAccounts();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: TextField(
+                        controller: _searchCtrl,
+                        decoration: InputDecoration(
+                          hintText: 'Search by name or email...',
+                          hintStyle: TextStyle(
+                            color: AppColors.textSecondary.withOpacity(0.7),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppColors.textSecondary,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            borderSide: const BorderSide(
+                              color: AppColors.border,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            borderSide: const BorderSide(
+                              color: AppColors.border,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  TealButton(
+                    label: 'Create',
+                    icon: Icons.add,
+                    onPressed: _showCreateAccountDialog,
+                  ),
+                ],
+              ),
             ),
           ).animate().fadeIn(delay: 50.ms, duration: 400.ms),
           const SizedBox(height: 16),
-          // Tab Views inside Card
           Expanded(
                 child: AppCard(
                   padding: EdgeInsets.zero,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildTabContent(_trainers),
-                      _buildTabContent(_trainees),
-                    ],
-                  ),
+                  child: _buildTableArea(),
                 ),
               )
               .animate()
@@ -146,64 +270,24 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
     );
   }
 
-  Widget _buildTabContent(List<Map<String, dynamic>> users) {
+  Widget _buildTableArea() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Search & Create Button
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 44,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search by name or email...',
-                      hintStyle: TextStyle(
-                        color: AppColors.textSecondary.withOpacity(0.7),
-                      ),
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: AppColors.textSecondary,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        borderSide: const BorderSide(color: AppColors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        borderSide: const BorderSide(color: AppColors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        borderSide: const BorderSide(color: AppColors.primary),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 0,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.lg),
-              TealButton(
-                label: 'Create',
-                icon: Icons.add,
-                onPressed: _showCreateAccountDialog,
-              ),
-            ],
-          ),
-        ),
         const Divider(height: 1, color: AppColors.border),
-        // Table
-        Expanded(child: _buildTable(users)),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+              ? Center(child: Text(_errorMessage!))
+              : _buildTable(_accounts),
+        ),
+        PaginationRow(total: _accounts.length, showing: _accounts.length),
       ],
     );
   }
 
-  Widget _buildTable(List<Map<String, dynamic>> users) {
+  Widget _buildTable(List<Account> users) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -245,7 +329,7 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
                                       0xFFDBEAFE,
                                     ), // light blue
                                     child: Text(
-                                      u['name']
+                                      u.fullName
                                           .split(' ')
                                           .map((e) => e.toString()[0])
                                           .take(2)
@@ -259,7 +343,7 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    u['name'],
+                                    u.fullName,
                                     style: GoogleFonts.inter(
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.textPrimary,
@@ -270,7 +354,7 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
                             ),
                             DataCell(
                               Text(
-                                u['email'],
+                                u.email,
                                 style: GoogleFonts.inter(
                                   color: AppColors.textSecondary,
                                 ),
@@ -289,7 +373,7 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
-                                  u['role'],
+                                  _roleLabel(u.role),
                                   style: GoogleFonts.inter(
                                     color: const Color(0xFF6D28D9), // purple
                                     fontSize: 12,
@@ -300,12 +384,8 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
                             ),
                             DataCell(
                               Switch(
-                                value: u['active'],
-                                onChanged: (val) {
-                                  setState(() {
-                                    u['active'] = val;
-                                  });
-                                },
+                                value: u.active,
+                                onChanged: (val) => _toggleStatus(u, val),
                                 activeThumbColor: AppColors.surface,
                                 activeTrackColor: AppColors.primary,
                                 inactiveThumbColor: AppColors.surface,
@@ -330,8 +410,13 @@ class _AccountManagementScreenState extends State<AccountManagementScreen>
             },
           ),
         ),
-        PaginationRow(total: users.length, showing: users.length),
       ],
     );
   }
+
+  String _roleLabel(String role) => switch (role) {
+    'ADMIN' => 'Admin',
+    'TRAINER' => 'Trainer',
+    _ => 'Learner',
+  };
 }

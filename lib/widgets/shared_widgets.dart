@@ -8,7 +8,12 @@ class PageHeader extends StatelessWidget {
   final String? subtitle;
   final List<Widget>? actions;
 
-  const PageHeader({super.key, required this.title, this.subtitle, this.actions});
+  const PageHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.actions,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +24,23 @@ class PageHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: GoogleFonts.inter(
-                      fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
-                Text(subtitle!,
-                    style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
+                Text(
+                  subtitle!,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ],
           ),
@@ -50,13 +65,20 @@ class AppCard extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: color ?? Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
-      child: Padding(padding: padding ?? const EdgeInsets.all(20), child: child),
+      child: Padding(
+        padding: padding ?? const EdgeInsets.all(20),
+        child: child,
+      ),
     );
   }
 }
@@ -74,13 +96,16 @@ class StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         label,
         style: GoogleFonts.inter(
-            fontSize: 12, fontWeight: FontWeight.w600, color: color),
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
@@ -119,25 +144,34 @@ class _TealButtonState extends State<TealButton> {
           color: widget.outlined
               ? (_hovered ? AppColors.primarySurface : Colors.white)
               : (_hovered ? AppColors.primaryDark : AppColors.primary),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           border: widget.outlined ? Border.all(color: AppColors.primary) : null,
           boxShadow: _hovered && !widget.outlined
-              ? [BoxShadow(color: AppColors.primary.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))]
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
               : [],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onPressed,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (widget.icon != null) ...[
-                    Icon(widget.icon, size: 16,
-                        color: widget.outlined ? AppColors.primary : Colors.white),
+                    Icon(
+                      widget.icon,
+                      size: 16,
+                      color: widget.outlined ? AppColors.primary : Colors.white,
+                    ),
                     const SizedBox(width: 8),
                   ],
                   Text(
@@ -170,7 +204,10 @@ class SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: GoogleFonts.inter(
-            fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
       ),
     );
   }
@@ -192,11 +229,21 @@ class PaginationRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text('Rows per page: 10',
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary)),
+          Text(
+            'Rows per page: 10',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(width: 24),
-          Text('1–$showing of $total',
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary)),
+          Text(
+            '1-$showing of $total',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(width: 8),
           _NavBtn(Icons.chevron_left, () {}),
           _NavBtn(Icons.chevron_right, () {}),

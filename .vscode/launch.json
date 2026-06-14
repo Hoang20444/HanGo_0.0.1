@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "java",
+            "name": "HanGoBackendApplication",
+            "request": "launch",
+            "mainClass": "com.hango.HanGoBackendApplication",
+            "projectName": "hango-backend"
+        },
+        {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",

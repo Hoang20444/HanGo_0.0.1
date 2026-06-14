@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hango/screens/login/otp_verification_screen.dart';
+import 'package:hango/services/api_client.dart';
+import 'package:hango/services/auth_service.dart';
 import 'package:hango/theme/app_colors.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -13,6 +15,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailCtrl = TextEditingController();
+  final _authService = const AuthService();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -23,18 +26,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _sendOTP() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
     if (_emailCtrl.text.isEmpty) {
       setState(() {
         _errorMessage = 'Please enter your email address';
-        _isLoading = false;
       });
       return;
     }
@@ -42,18 +36,35 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!_emailCtrl.text.contains('@')) {
       setState(() {
         _errorMessage = 'Please enter a valid email address';
-        _isLoading = false;
       });
       return;
     }
 
-    // Navigate to OTP verification screen
-    if (mounted) {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _authService.sendForgotPasswordOtp(_emailCtrl.text);
+      if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => OTPVerificationScreen(email: _emailCtrl.text),
         ),
       );
+    } on ApiException catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = error.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Cannot connect to the backend server');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -73,7 +84,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       children: [
         // Left — branding
         Expanded(
-          flex: 5,
+          flex: 1,
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -145,7 +156,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         // Right — form
         Expanded(
-          flex: 4,
+          flex: 1,
           child: Container(
             color: Colors.white,
             child: Center(

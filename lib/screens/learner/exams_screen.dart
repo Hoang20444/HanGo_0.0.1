@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:hango/screens/learner/learner_ui.dart';
 import 'package:hango/theme/app_colors.dart';
 import 'package:hango/widgets/shared_widgets.dart';
 
@@ -65,134 +66,150 @@ class _ExamsScreenState extends State<ExamsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+    return LearnerPageWrapper(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const PageHeader(
+          const LearnerSectionHeader(
             title: 'Exams & Quizzes',
             subtitle: 'Take assessments and view past academic results',
           ).animate().fadeIn(duration: 400.ms),
-          const SizedBox(height: 32),
-          // Active Exams Heading
+          const SizedBox(height: LearnerUi.sectionGap),
           Text(
             'Available Assessments',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ).animate().fadeIn(delay: 100.ms),
-          const SizedBox(height: 16),
-          // Responsive Card list
+            style: LearnerUi.sectionTitleStyle,
+          ).animate().fadeIn(delay: 80.ms),
+          const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
-              final cols = constraints.maxWidth > 900
-                  ? 3
-                  : (constraints.maxWidth > 600 ? 2 : 1);
-              return Wrap(
-                spacing: 20,
-                runSpacing: 20,
-                children: _activeExams.asMap().entries.map((e) {
-                  final ex = e.value;
-                  return SizedBox(
-                    width: (constraints.maxWidth - 20 * (cols - 1)) / cols,
-                    child: _buildActiveExamCard(ex),
-                  );
-                }).toList(),
+              final cols = learnerGridColumns(constraints.maxWidth);
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: cols,
+                  crossAxisSpacing: LearnerUi.cardSpacing,
+                  mainAxisSpacing: LearnerUi.cardSpacing,
+                  childAspectRatio: cols == 1 ? 1.2 : 1.05,
+                ),
+                itemCount: _activeExams.length,
+                itemBuilder: (_, i) => _buildActiveExamCard(
+                  _activeExams[i],
+                ).animate().fadeIn(delay: (100 + i * 60).ms, duration: 350.ms),
               );
             },
-          ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
-          const SizedBox(height: 40),
-          // Exam history
+          ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
+          const SizedBox(height: LearnerUi.sectionGap),
           Text(
             'Attempt History',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ).animate().fadeIn(delay: 200.ms),
-          const SizedBox(height: 16),
-          AppCard(padding: EdgeInsets.zero, child: _buildHistoryTable())
+            style: LearnerUi.sectionTitleStyle,
+          ).animate().fadeIn(delay: 180.ms),
+          const SizedBox(height: 14),
+          Container(
+                decoration: LearnerUi.cardDecoration(elevated: false),
+                clipBehavior: Clip.antiAlias,
+                child: _buildHistoryTable(),
+              )
               .animate()
-              .fadeIn(delay: 250.ms, duration: 400.ms)
-              .slideY(begin: 0.05, end: 0),
+              .fadeIn(delay: 220.ms, duration: 400.ms)
+              .slideY(begin: 0.03, end: 0),
         ],
       ),
     );
   }
 
   Widget _buildActiveExamCard(Map<String, dynamic> ex) {
-    return AppCard(
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: LearnerUi.cardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                ex['code'] as String,
-                style: GoogleFonts.ibmPlexMono(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                  fontSize: 12,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  ex['code'] as String,
+                  style: GoogleFonts.ibmPlexMono(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                    fontSize: 11,
+                  ),
                 ),
               ),
               StatusBadge(
-                label: '${ex['questions']} Questions',
+                label: '${ex['questions']} Qs',
                 color: AppColors.info,
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Text(
             ex['title'] as String,
             style: GoogleFonts.inter(
               fontWeight: FontWeight.w600,
-              fontSize: 15,
+              fontSize: 14,
               color: AppColors.textPrimary,
+              height: 1.35,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 16),
+          const Spacer(),
           Row(
             children: [
-              const Icon(
-                Icons.timer_outlined,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                ex['duration'] as String,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+              Expanded(
+                child: _metaChip(
+                  Icons.timer_outlined,
+                  ex['duration'] as String,
                 ),
               ),
-              const Spacer(),
-              const Icon(
-                Icons.refresh_outlined,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Attempts: ${ex['attempts']}',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+              const SizedBox(width: 10),
+              Expanded(
+                child: _metaChip(
+                  Icons.refresh_rounded,
+                  'Attempts: ${ex['attempts']}',
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: TealButton(label: 'Start Exam', onPressed: () {}),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metaChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(LearnerUi.cardRadius),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 13, color: AppColors.textSecondary),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -204,87 +221,77 @@ class _ExamsScreenState extends State<ExamsScreen> {
       builder: (context, constraints) {
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(
-                  const Color(0xFFF8FAFC),
-                ),
-                dataRowMaxHeight: 60,
-                dataRowMinHeight: 60,
-                headingTextStyle: GoogleFonts.inter(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-                columns: const [
-                  DataColumn(label: Text('CODE')),
-                  DataColumn(label: Text('EXAM TITLE')),
-                  DataColumn(label: Text('SCORE')),
-                  DataColumn(label: Text('PERCENTAGE')),
-                  DataColumn(label: Text('DATE TAKEN')),
-                  DataColumn(label: Text('STATUS')),
-                ],
-                rows: _examHistory.map((h) {
-                  final isPassed = h['status'] == 'Passed';
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        Text(
-                          h['code'] as String,
-                          style: GoogleFonts.ibmPlexMono(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
-                          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: constraints.maxWidth),
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+              dataRowMaxHeight: 56,
+              dataRowMinHeight: 56,
+              headingTextStyle: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+              columns: const [
+                DataColumn(label: Text('CODE')),
+                DataColumn(label: Text('EXAM TITLE')),
+                DataColumn(label: Text('SCORE')),
+                DataColumn(label: Text('PERCENTAGE')),
+                DataColumn(label: Text('DATE')),
+                DataColumn(label: Text('STATUS')),
+              ],
+              rows: _examHistory.map((h) {
+                final isPassed = h['status'] == 'Passed';
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(
+                        h['code'] as String,
+                        style: GoogleFonts.ibmPlexMono(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          fontSize: 12,
                         ),
                       ),
-                      DataCell(
-                        Text(
-                          h['title'] as String,
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
-                          ),
+                    ),
+                    DataCell(
+                      Text(
+                        h['title'] as String,
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
                         ),
                       ),
-                      DataCell(
-                        Text(
-                          h['score'] as String,
-                          style: GoogleFonts.inter(
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          h['percentage'] as String,
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.bold,
-                            color: isPassed
-                                ? AppColors.success
-                                : AppColors.error,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          h['date'] as String,
-                          style: GoogleFonts.inter(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        StatusBadge(
-                          label: h['status'] as String,
+                    ),
+                    DataCell(Text(h['score'] as String)),
+                    DataCell(
+                      Text(
+                        h['percentage'] as String,
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
                           color: isPassed ? AppColors.success : AppColors.error,
                         ),
                       ),
-                    ],
-                  );
-                }).toList(),
-              ),
+                    ),
+                    DataCell(
+                      Text(
+                        h['date'] as String,
+                        style: GoogleFonts.inter(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      StatusBadge(
+                        label: h['status'] as String,
+                        color: isPassed ? AppColors.success : AppColors.error,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
           ),
         );

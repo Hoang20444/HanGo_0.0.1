@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:hango/screens/learner/learner_ui.dart';
 import 'package:hango/theme/app_colors.dart';
 import 'package:hango/widgets/shared_widgets.dart';
 
@@ -12,18 +13,19 @@ class LearningPathScreen extends StatefulWidget {
 }
 
 class _LearningPathScreenState extends State<LearningPathScreen> {
-  bool _isRecommendedPath = true; // true = Recommended, false = Self-Study (Personal)
+  bool _isRecommendedPath = true;
 
   final List<Map<String, dynamic>> _recommendedNodes = [
     {
       'title': 'Pronunciation & Phonics',
       'description': 'Master the basic English sound system and IPA.',
-      'status': 'completed', // completed, active, locked
+      'status': 'completed',
       'type': 'theory',
     },
     {
       'title': 'Basic Sentence Structures',
-      'description': 'Understand Subject-Verb-Object pattern and auxiliary verbs.',
+      'description':
+          'Understand Subject-Verb-Object pattern and auxiliary verbs.',
       'status': 'completed',
       'type': 'theory',
     },
@@ -76,35 +78,54 @@ class _LearningPathScreenState extends State<LearningPathScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final activeNodes = _isRecommendedPath ? _recommendedNodes : _selfStudyNodes;
+    final activeNodes = _isRecommendedPath
+        ? _recommendedNodes
+        : _selfStudyNodes;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+    return LearnerPageWrapper(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const PageHeader(
-                title: 'Learning Path',
-                subtitle: 'Choose between proposed learning flow or self-guided study',
-              ),
-              _buildModeToggle(),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 640;
+              if (isCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const LearnerSectionHeader(
+                      title: 'Learning Path',
+                      subtitle:
+                          'Choose between proposed learning flow or self-guided study',
+                    ),
+                    const SizedBox(height: 16),
+                    _buildModeToggle(),
+                  ],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Expanded(
+                    child: LearnerSectionHeader(
+                      title: 'Learning Path',
+                      subtitle:
+                          'Choose between proposed learning flow or self-guided study',
+                    ),
+                  ),
+                  _buildModeToggle(),
+                ],
+              );
+            },
           ).animate().fadeIn(duration: 400.ms),
-          const SizedBox(height: 32),
+          const SizedBox(height: LearnerUi.sectionGap),
           Text(
             _isRecommendedPath
                 ? 'AI Recommended Roadmap'
                 : 'My Personal Study List',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ).animate().fadeIn(delay: 100.ms),
-          const SizedBox(height: 24),
+            style: LearnerUi.sectionTitleStyle,
+          ).animate().fadeIn(delay: 80.ms),
+          const SizedBox(height: 20),
           _buildPathTimeline(activeNodes),
         ],
       ),
@@ -115,8 +136,9 @@ class _LearningPathScreenState extends State<LearningPathScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.border.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(10),
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(LearnerUi.cardRadius),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -124,7 +146,7 @@ class _LearningPathScreenState extends State<LearningPathScreen> {
           _toggleBtn('Proposed Path', _isRecommendedPath, () {
             setState(() => _isRecommendedPath = true);
           }),
-          _toggleBtn('Self-Study Mode', !_isRecommendedPath, () {
+          _toggleBtn('Self-Study', !_isRecommendedPath, () {
             setState(() => _isRecommendedPath = false);
           }),
         ],
@@ -136,18 +158,19 @@ class _LearningPathScreenState extends State<LearningPathScreen> {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         decoration: BoxDecoration(
           color: active ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 6,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -171,7 +194,10 @@ class _LearningPathScreenState extends State<LearningPathScreen> {
       itemBuilder: (context, index) {
         final node = nodes[index];
         final isLast = index == nodes.length - 1;
-        return _buildTimelineNode(node, index + 1, isLast);
+        return _buildTimelineNode(node, index + 1, isLast)
+            .animate()
+            .fadeIn(delay: (index * 60).ms, duration: 350.ms)
+            .slideX(begin: 0.02, end: 0);
       },
     );
   }
@@ -181,106 +207,139 @@ class _LearningPathScreenState extends State<LearningPathScreen> {
     final type = node['type'] as String;
 
     Color stepColor = AppColors.border;
-    IconData stepIcon = Icons.lock_outline;
+    IconData stepIcon = Icons.lock_outline_rounded;
 
     if (status == 'completed') {
       stepColor = AppColors.success;
-      stepIcon = Icons.check;
+      stepIcon = Icons.check_rounded;
     } else if (status == 'active') {
       stepColor = AppColors.primary;
-      if (type == 'exam') {
-        stepIcon = Icons.quiz_outlined;
-      } else if (type == 'vocabulary') {
-        stepIcon = Icons.translate_rounded;
-      } else {
-        stepIcon = Icons.menu_book_rounded;
-      }
+      stepIcon = switch (type) {
+        'exam' => Icons.quiz_outlined,
+        'vocabulary' => Icons.translate_rounded,
+        _ => Icons.menu_book_rounded,
+      };
     } else {
-      stepColor = AppColors.textSecondary.withOpacity(0.4);
-      stepIcon = Icons.lock_outline;
+      stepColor = AppColors.textMuted;
+      stepIcon = Icons.lock_outline_rounded;
     }
 
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Timeline indicator column
           Column(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: status == 'active' ? stepColor : stepColor.withOpacity(0.1),
+                  color: status == 'active'
+                      ? stepColor
+                      : stepColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
-                  border: Border.all(color: stepColor, width: 2),
+                  border: Border.all(
+                    color: stepColor,
+                    width: status == 'locked' ? 1.5 : 2,
+                  ),
                 ),
                 child: Icon(
                   stepIcon,
                   color: status == 'active' ? Colors.white : stepColor,
-                  size: 20,
+                  size: 18,
                 ),
               ),
               if (!isLast)
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: status == 'completed' ? AppColors.success : AppColors.border,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    decoration: BoxDecoration(
+                      color: status == 'completed'
+                          ? AppColors.success.withValues(alpha: 0.5)
+                          : AppColors.border,
+                      borderRadius: BorderRadius.circular(1),
+                    ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(width: 20),
-          // Content Card column
+          const SizedBox(width: 16),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 24),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
               child: Opacity(
-                opacity: status == 'locked' ? 0.6 : 1.0,
-                child: AppCard(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'Step $step: ${node['title']}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
+                opacity: status == 'locked' ? 0.55 : 1.0,
+                child: Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: LearnerUi.cardDecoration(
+                    elevated: status == 'active',
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final body = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                'Step $step: ${node['title']}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
                                 ),
-                                const SizedBox(width: 12),
-                                _buildBadge(type),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              node['description'] as String,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
                               ),
+                              _buildBadge(type),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            node['description'] as String,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              height: 1.4,
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      if (status == 'active')
-                        TealButton(
-                          label: 'Start Now',
+                          ),
+                        ],
+                      );
+
+                      final action = switch (status) {
+                        'active' => LearnerPrimaryButton(
+                          label: 'Start',
                           icon: Icons.play_arrow_rounded,
                           onPressed: () {},
-                        )
-                      else if (status == 'completed')
-                        const StatusBadge(label: 'Completed', color: AppColors.success)
-                      else
-                        const Icon(Icons.lock_rounded, color: AppColors.textSecondary, size: 20),
-                    ],
+                        ),
+                        'completed' => const StatusBadge(
+                          label: 'Done',
+                          color: AppColors.success,
+                        ),
+                        _ => Icon(
+                          Icons.lock_rounded,
+                          color: AppColors.textMuted,
+                          size: 20,
+                        ),
+                      };
+
+                      if (constraints.maxWidth < 520) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [body, const SizedBox(height: 14), action],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          Expanded(child: body),
+                          const SizedBox(width: 12),
+                          action,
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -292,15 +351,11 @@ class _LearningPathScreenState extends State<LearningPathScreen> {
   }
 
   Widget _buildBadge(String type) {
-    Color badgeColor = AppColors.primary;
-    if (type == 'exam') {
-      badgeColor = AppColors.error;
-    } else if (type == 'vocabulary') {
-      badgeColor = const Color(0xFF8B5CF6);
-    }
-    return StatusBadge(
-      label: type.toUpperCase(),
-      color: badgeColor,
-    );
+    final badgeColor = switch (type) {
+      'exam' => AppColors.error,
+      'vocabulary' => const Color(0xFF6366F1),
+      _ => AppColors.primary,
+    };
+    return StatusBadge(label: type.toUpperCase(), color: badgeColor);
   }
 }

@@ -1,0 +1,3 @@
+- [ ] Chuẩn hoá layout desktop trái/phải (login, sign_up, forgot_password, otp_verification, set_new_password) về tỉ lệ 50/50
+- [ ] SetNewPasswordScreen: hiển thị thông báo đỏ ngay dưới ô “Confirm Password” khi new password không trùng password cũ (message lấy từ backend)
+- [ ] Chạy `flutter analyze` để đảm bảo compile không lỗi

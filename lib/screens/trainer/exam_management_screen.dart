@@ -63,10 +63,10 @@ class ExamManagementScreen extends StatelessWidget {
 
   Widget _buildExamCard(int index) {
     final titles = [
-      'National High School Exam 2023',
+      'National High School Exam 2025',
       'IELTS Mock Test 1',
       'Mid-term Assessment',
-      'Final Year Exam 2022',
+      'Final Year Exam 2025',
     ];
     final times = ['60 mins', '120 mins', '45 mins', '90 mins'];
 

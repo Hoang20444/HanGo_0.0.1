@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hango/services/account_service.dart';
 import 'package:hango/theme/app_colors.dart';
 import 'package:hango/widgets/shared_widgets.dart';
+
+const _roles = ['ADMIN', 'TRAINER', 'LEARNER'];
 
 class CreateAccountDialog extends StatefulWidget {
   const CreateAccountDialog({super.key});
@@ -11,215 +14,173 @@ class CreateAccountDialog extends StatefulWidget {
 }
 
 class _CreateAccountDialogState extends State<CreateAccountDialog> {
-  int _gender = 0; // 0 = Male, 1 = Female
+  final _fullNameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController(text: 'Password@123');
+  final _dateOfBirthCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  String _role = 'LEARNER';
+  String _gender = 'Male';
+  bool _active = true;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _fullNameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    _dateOfBirthCtrl.dispose();
+    _addressCtrl.dispose();
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  bool _isValidPhone(String raw) {
+    final v = raw.trim();
+    if (v.isEmpty) return true; // optional
+    // E.164 basic: optional +, then 8-15 digits
+    final regExp = RegExp(r'^\+?[1-9]\d{7,14}$');
+    return regExp.hasMatch(v);
+  }
+
+  void _submit() {
+    if (_fullNameCtrl.text.trim().isEmpty) {
+      setState(() => _errorMessage = 'Please enter full name');
+      return;
+    }
+    if (!_emailCtrl.text.contains('@')) {
+      setState(() => _errorMessage = 'Please enter a valid email');
+      return;
+    }
+    if (_passwordCtrl.text.length < 8) {
+      setState(
+        () => _errorMessage = 'Password must have at least 8 characters',
+      );
+      return;
+    }
+    if (!_isValidPhone(_phoneCtrl.text)) {
+      setState(
+        () => _errorMessage =
+            'Phone number must be valid (E.164), e.g. +84912345678',
+      );
+      return;
+    }
+
+    Navigator.pop(context, {
+      'fullName': _fullNameCtrl.text.trim(),
+      'email': _emailCtrl.text.trim(),
+      'password': _passwordCtrl.text,
+      'role': _role,
+      'active': _active,
+      'dateOfBirth': _emptyToNull(_dateOfBirthCtrl.text),
+      'gender': _gender,
+      'address': _emptyToNull(_addressCtrl.text),
+      'phoneNumber': _emptyToNull(_phoneCtrl.text),
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Container(
-        width: 800,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+    return _AccountDialogShell(
+      title: 'Create New Account',
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Back'),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9), // Slate-100
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Text(
-                'Create New Account',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF334155),
-                ),
-              ),
-            ),
-            const Divider(height: 1, color: AppColors.border),
-            // Form
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('First Name')),
-                        const SizedBox(width: 24),
-                        Expanded(child: _buildTextField('Name')),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('Email')),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: _buildTextField(
-                            'Date of Birth',
-                            hint: 'mm/dd/yyyy',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildLabel('Gender'),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Radio<int>(
-                                    value: 0,
-                                    groupValue: _gender,
-                                    onChanged: (v) =>
-                                        setState(() => _gender = v!),
-                                    activeColor: AppColors.primary,
-                                  ),
-                                  const Text('Male'),
-                                  const SizedBox(width: 16),
-                                  Radio<int>(
-                                    value: 1,
-                                    groupValue: _gender,
-                                    onChanged: (v) =>
-                                        setState(() => _gender = v!),
-                                    activeColor: AppColors.primary,
-                                  ),
-                                  const Text('Female'),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(child: _buildTextField('Address')),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('Phone Number')),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildLabel('Role'),
-                              const SizedBox(height: 8),
-                              DropdownButtonFormField<String>(
-                                decoration: _inputDecoration(
-                                  'Select user role',
-                                ),
-                                items: const [],
-                                onChanged: (v) {},
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Actions
-            Padding(
-              padding: const EdgeInsets.all(32),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      side: const BorderSide(color: AppColors.border),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      foregroundColor: AppColors.textSecondary,
-                    ),
-                    child: const Text('Back'),
-                  ),
-                  const SizedBox(width: 16),
-                  TealButton(
-                    label: 'Create',
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.ibmPlexMono(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary,
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, {String? hint}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel(label),
-        const SizedBox(height: 8),
-        TextField(decoration: _inputDecoration(hint)),
+        TealButton(label: 'Create', onPressed: _submit),
       ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ErrorMessage(message: _errorMessage),
+          Row(
+            children: [
+              Expanded(child: _textField('Full Name', _fullNameCtrl)),
+              const SizedBox(width: 20),
+              Expanded(child: _textField('Email', _emailCtrl)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _textField('Password', _passwordCtrl)),
+              const SizedBox(width: 20),
+              Expanded(child: _roleDropdown()),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _textField(
+                  'Date of Birth',
+                  _dateOfBirthCtrl,
+                  hint: 'yyyy-mm-dd',
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(child: _genderDropdown()),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _textField('Address', _addressCtrl)),
+              const SizedBox(width: 20),
+              Expanded(child: _textField('Phone Number', _phoneCtrl)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SwitchListTile(
+            value: _active,
+            onChanged: (value) => setState(() => _active = value),
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Active account'),
+          ),
+        ],
+      ),
     );
   }
 
-  InputDecoration _inputDecoration(String? hint) {
-    return InputDecoration(
-      hintText: hint,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.border),
+  Widget _roleDropdown() {
+    return _labeled(
+      'Role',
+      DropdownButtonFormField<String>(
+        initialValue: _role,
+        decoration: _inputDecoration(),
+        items: _roles
+            .map(
+              (role) =>
+                  DropdownMenuItem(value: role, child: Text(_roleLabel(role))),
+            )
+            .toList(),
+        onChanged: (value) => setState(() => _role = value ?? _role),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.border),
+    );
+  }
+
+  Widget _genderDropdown() {
+    return _labeled(
+      'Gender',
+      DropdownButtonFormField<String>(
+        initialValue: _gender,
+        decoration: _inputDecoration(),
+        items: const [
+          DropdownMenuItem(value: 'Male', child: Text('Male')),
+          DropdownMenuItem(value: 'Female', child: Text('Female')),
+          DropdownMenuItem(value: 'Other', child: Text('Other')),
+        ],
+        onChanged: (value) => setState(() => _gender = value ?? _gender),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.primary),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
   }
 }
 
 class AccountDetailDialog extends StatefulWidget {
-  final Map<String, dynamic> user;
+  final Account user;
+
   const AccountDetailDialog({required this.user, super.key});
 
   @override
@@ -227,394 +188,403 @@ class AccountDetailDialog extends StatefulWidget {
 }
 
 class _AccountDetailDialogState extends State<AccountDetailDialog> {
-  int _gender = 1; // 0 = Male, 1 = Female
-  bool _isActive = true;
+  late final TextEditingController _fullNameCtrl;
+  late final TextEditingController _emailCtrl;
+  late final TextEditingController _passwordCtrl;
+  late final TextEditingController _dateOfBirthCtrl;
+  late final TextEditingController _addressCtrl;
+  late final TextEditingController _phoneCtrl;
+  late String _role;
+  late String _gender;
+  late bool _active;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _isActive = widget.user['active'] ?? true;
+    _fullNameCtrl = TextEditingController(text: widget.user.fullName);
+    _emailCtrl = TextEditingController(text: widget.user.email);
+    _passwordCtrl = TextEditingController();
+    _dateOfBirthCtrl = TextEditingController(
+      text: widget.user.dateOfBirth ?? '',
+    );
+    _addressCtrl = TextEditingController(text: widget.user.address ?? '');
+    _phoneCtrl = TextEditingController(text: widget.user.phoneNumber ?? '');
+    _role = widget.user.role;
+    _gender = widget.user.gender ?? 'Male';
+    _active = widget.user.active;
+  }
+
+  @override
+  void dispose() {
+    _fullNameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    _dateOfBirthCtrl.dispose();
+    _addressCtrl.dispose();
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  bool _isValidPhone(String raw) {
+    final v = raw.trim();
+    if (v.isEmpty) return true; // optional
+    final regExp = RegExp(r'^\+?[1-9]\d{7,14}$');
+    return regExp.hasMatch(v);
+  }
+
+  void _update() {
+    if (_fullNameCtrl.text.trim().isEmpty) {
+      setState(() => _errorMessage = 'Please enter full name');
+      return;
+    }
+    if (!_emailCtrl.text.contains('@')) {
+      setState(() => _errorMessage = 'Please enter a valid email');
+      return;
+    }
+    if (_passwordCtrl.text.isNotEmpty && _passwordCtrl.text.length < 8) {
+      setState(
+        () => _errorMessage = 'New password must have at least 8 characters',
+      );
+      return;
+    }
+    if (!_isValidPhone(_phoneCtrl.text)) {
+      setState(
+        () => _errorMessage =
+            'Phone number must be valid (E.164), e.g. +84912345678',
+      );
+      return;
+    }
+
+    Navigator.pop(context, {
+      'action': 'update',
+      'payload': {
+        'fullName': _fullNameCtrl.text.trim(),
+        'email': _emailCtrl.text.trim(),
+        'password': _emptyToNull(_passwordCtrl.text),
+        'role': _role,
+        'active': _active,
+        'dateOfBirth': _emptyToNull(_dateOfBirthCtrl.text),
+        'gender': _gender,
+        'address': _emptyToNull(_addressCtrl.text),
+        'phoneNumber': _emptyToNull(_phoneCtrl.text),
+      },
+    });
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete account?'),
+        content: Text('This will permanently delete ${widget.user.email}.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      Navigator.pop(context, {'action': 'delete'});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    return _AccountDialogShell(
+      title: '${_roleLabel(widget.user.role)} Account Detail',
+      actions: [
+        TextButton.icon(
+          onPressed: _confirmDelete,
+          icon: const Icon(Icons.delete_outline, color: AppColors.error),
+          label: const Text('Delete', style: TextStyle(color: AppColors.error)),
+        ),
+        const Spacer(),
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Back'),
+        ),
+        TealButton(label: 'Update', onPressed: _update),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ErrorMessage(message: _errorMessage),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 34,
+                backgroundColor: const Color(0xFF1E293B),
+                child: Text(
+                  widget.user.fullName.substring(0, 1).toUpperCase(),
+                  style: const TextStyle(fontSize: 28, color: Colors.white),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.user.fullName,
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'ID: ${widget.user.id}',
+                      style: GoogleFonts.inter(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(child: _textField('Full Name', _fullNameCtrl)),
+              const SizedBox(width: 20),
+              Expanded(child: _textField('Email', _emailCtrl)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _textField(
+                  'New Password',
+                  _passwordCtrl,
+                  hint: 'Leave blank to keep current password',
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(child: _roleDropdown()),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _textField(
+                  'Date of Birth',
+                  _dateOfBirthCtrl,
+                  hint: 'yyyy-mm-dd',
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(child: _genderDropdown()),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _textField('Address', _addressCtrl)),
+              const SizedBox(width: 20),
+              Expanded(child: _textField('Phone Number', _phoneCtrl)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SwitchListTile(
+            value: _active,
+            onChanged: (value) => setState(() => _active = value),
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Active account'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _roleDropdown() {
+    return _labeled(
+      'Role',
+      DropdownButtonFormField<String>(
+        initialValue: _role,
+        decoration: _inputDecoration(),
+        items: _roles
+            .map(
+              (role) =>
+                  DropdownMenuItem(value: role, child: Text(_roleLabel(role))),
+            )
+            .toList(),
+        onChanged: (value) => setState(() => _role = value ?? _role),
+      ),
+    );
+  }
+
+  Widget _genderDropdown() {
+    return _labeled(
+      'Gender',
+      DropdownButtonFormField<String>(
+        initialValue: _gender,
+        decoration: _inputDecoration(),
+        items: const [
+          DropdownMenuItem(value: 'Male', child: Text('Male')),
+          DropdownMenuItem(value: 'Female', child: Text('Female')),
+          DropdownMenuItem(value: 'Other', child: Text('Other')),
+        ],
+        onChanged: (value) => setState(() => _gender = value ?? _gender),
+      ),
+    );
+  }
+}
+
+class _AccountDialogShell extends StatelessWidget {
+  final String title;
+  final Widget child;
+  final List<Widget> actions;
+
+  const _AccountDialogShell({
+    required this.title,
+    required this.child,
+    required this.actions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Container(
-        width: 800,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 820),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Title Outside Border conceptually
             Padding(
-              padding: const EdgeInsets.fromLTRB(32, 32, 32, 16),
+              padding: const EdgeInsets.fromLTRB(28, 24, 28, 16),
               child: Text(
-                '${widget.user['role']} Account Detail',
+                title,
                 style: GoogleFonts.inter(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B), // Slate-800
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
-            // Bordered Card Content
+            const Divider(height: 1, color: AppColors.border),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.border),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Profile Header
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Row(
-                          children: [
-                            Stack(
-                              children: [
-                                CircleAvatar(
-                                  radius: 40,
-                                  backgroundColor: const Color(0xFF1E293B),
-                                  child: Text(
-                                    widget.user['name'].substring(0, 1),
-                                    style: const TextStyle(
-                                      fontSize: 32,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.primary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.edit,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 20),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.user['name'],
-                                  style: GoogleFonts.inter(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF0F172A),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'ID: PS-29384-CC',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Form
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildTextField(
-                                    'FullName',
-                                    initialValue: widget.user['name'],
-                                  ),
-                                ),
-                                const SizedBox(width: 24),
-                                Expanded(
-                                  child: _buildTextField(
-                                    'Username',
-                                    initialValue: widget.user['email'].split(
-                                      '@',
-                                    )[0],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildTextField(
-                                    'Email',
-                                    initialValue: widget.user['email'],
-                                    prefixIcon: const Icon(
-                                      Icons.email_outlined,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 24),
-                                Expanded(
-                                  child: _buildTextField(
-                                    'Role',
-                                    initialValue: widget.user['role'],
-                                    readOnly: true,
-                                    fillColor: const Color(0xFFF8FAFC),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _buildTextField(
-                                    'Date of Birth',
-                                    initialValue: '28/04/2004',
-                                  ),
-                                ),
-                                const SizedBox(width: 24),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildLabel('Gender'),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Radio<int>(
-                                            value: 1,
-                                            groupValue: _gender,
-                                            onChanged: (v) =>
-                                                setState(() => _gender = v!),
-                                            activeColor: AppColors.primary,
-                                          ),
-                                          const Text('Female'),
-                                          const SizedBox(width: 16),
-                                          Radio<int>(
-                                            value: 0,
-                                            groupValue: _gender,
-                                            onChanged: (v) =>
-                                                setState(() => _gender = v!),
-                                            activeColor: AppColors.primary,
-                                          ),
-                                          const Text('Male'),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            _buildLabel('Account Status'),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                _buildStatusButton(
-                                  'Active',
-                                  true,
-                                  Icons.check_circle_outline,
-                                ),
-                                const SizedBox(width: 12),
-                                _buildStatusButton(
-                                  'Inactive',
-                                  false,
-                                  Icons.cancel_outlined,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1, color: AppColors.border),
-                      // Actions inside bordered card
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            TextButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                color: AppColors.error,
-                              ),
-                              label: Text(
-                                'Deactivate account',
-                                style: GoogleFonts.inter(
-                                  color: AppColors.error,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                OutlinedButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                      vertical: 16,
-                                    ),
-                                    side: const BorderSide(
-                                      color: AppColors.primary,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    foregroundColor: AppColors.primary,
-                                  ),
-                                  child: const Text('Update'),
-                                ),
-                                const SizedBox(width: 12),
-                                TealButton(
-                                  label: 'Back',
-                                  onPressed: () => Navigator.pop(context),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                padding: const EdgeInsets.all(28),
+                child: child,
               ),
             ),
-            const SizedBox(height: 32),
+            const Divider(height: 1, color: AppColors.border),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: actions
+                    .map(
+                      (action) => Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: action,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF64748B),
-      ),
-    );
-  }
+class _ErrorMessage extends StatelessWidget {
+  final String? message;
 
-  Widget _buildTextField(
-    String label, {
-    String? initialValue,
-    bool readOnly = false,
-    Color? fillColor,
-    Widget? prefixIcon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel(label),
-        const SizedBox(height: 8),
-        TextFormField(
-          initialValue: initialValue,
-          readOnly: readOnly,
-          style: GoogleFonts.inter(
-            color: readOnly ? const Color(0xFF0F172A) : const Color(0xFF334155),
-            fontWeight: readOnly ? FontWeight.w600 : FontWeight.w400,
-          ),
-          decoration: InputDecoration(
-            prefixIcon: prefixIcon,
-            filled: fillColor != null,
-            fillColor: fillColor,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: fillColor != null
-                    ? Colors.transparent
-                    : AppColors.border,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: readOnly ? Colors.transparent : AppColors.primary,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  const _ErrorMessage({this.message});
 
-  Widget _buildStatusButton(String label, bool isActive, IconData icon) {
-    final isSelected = _isActive == isActive;
-    return InkWell(
-      onTap: () => setState(() => _isActive = isActive),
-      borderRadius: BorderRadius.circular(8),
+  @override
+  Widget build(BuildContext context) {
+    if (message == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (isActive ? const Color(0xFFECFDF5) : const Color(0xFFEEF2F6))
-              : Colors.transparent,
-          border: Border.all(
-            color: isSelected
-                ? (isActive ? AppColors.primary : const Color(0xFFCBD5E1))
-                : AppColors.border,
-          ),
+          color: AppColors.error.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.error.withOpacity(0.3)),
         ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected
-                  ? (isActive ? AppColors.primary : const Color(0xFF475569))
-                  : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? (isActive ? AppColors.primary : const Color(0xFF475569))
-                    : AppColors.textSecondary,
-              ),
-            ),
-          ],
+        child: Text(
+          message!,
+          style: GoogleFonts.inter(fontSize: 13, color: AppColors.error),
         ),
       ),
     );
   }
+}
+
+Widget _textField(
+  String label,
+  TextEditingController controller, {
+  String? hint,
+}) {
+  return _labeled(
+    label,
+    TextField(controller: controller, decoration: _inputDecoration(hint)),
+  );
+}
+
+Widget _labeled(String label, Widget child) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
+        ),
+      ),
+      const SizedBox(height: 8),
+      child,
+    ],
+  );
+}
+
+InputDecoration _inputDecoration([String? hint]) {
+  return InputDecoration(
+    hintText: hint,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: AppColors.primary),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  );
+}
+
+String _roleLabel(String role) => switch (role) {
+  'ADMIN' => 'Admin',
+  'TRAINER' => 'Trainer',
+  _ => 'Learner',
+};
+
+String? _emptyToNull(String value) {
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
 }

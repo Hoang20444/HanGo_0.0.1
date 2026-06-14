@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hango/screens/login/set_new_password_screen.dart';
+import 'package:hango/services/api_client.dart';
+import 'package:hango/services/auth_service.dart';
 import 'package:hango/theme/app_colors.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class OTPVerificationScreen extends StatefulWidget {
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   late List<TextEditingController> _otpControllers;
   final _focusNodes = List<FocusNode>.generate(6, (_) => FocusNode());
+  final _authService = const AuthService();
   bool _isLoading = false;
   String? _errorMessage;
   int _secondsRemaining = 120;
@@ -65,19 +68,30 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       _errorMessage = null;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
+    try {
+      await _authService.verifyOtp(email: widget.email, otp: otp);
+      if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => SetNewPasswordScreen(email: widget.email, otp: otp),
         ),
       );
+    } on ApiException catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = error.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Cannot connect to the backend server');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  void _resendOTP() {
+  Future<void> _resendOTP() async {
     setState(() {
       _secondsRemaining = 120;
       for (var controller in _otpControllers) {
@@ -87,6 +101,17 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
     _focusNodes[0].requestFocus();
     _startTimer();
+    try {
+      await _authService.sendForgotPasswordOtp(widget.email);
+    } on ApiException catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = error.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Cannot connect to the backend server');
+      }
+    }
   }
 
   @override
@@ -103,7 +128,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     return Row(
       children: [
         Expanded(
-          flex: 5,
+          flex: 1,
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -174,7 +199,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
           ),
         ),
         Expanded(
-          flex: 4,
+          flex: 1,
           child: Container(
             color: Colors.white,
             child: Center(

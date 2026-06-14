@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hango/screens/login/login_screen.dart';
+import 'package:hango/services/api_client.dart';
+import 'package:hango/services/auth_service.dart';
 import 'package:hango/theme/app_colors.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _authService = const AuthService();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _agreeToTerms = false;
@@ -99,10 +102,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _errorMessage = null;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
+    try {
+      await _authService.register(
+        fullName: _fullNameCtrl.text,
+        email: _emailCtrl.text,
+        password: _passwordCtrl.text,
+      );
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -128,6 +134,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ],
         ),
       );
+    } on ApiException catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = error.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Cannot connect to the backend server');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -145,7 +163,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Row(
       children: [
         Expanded(
-          flex: 5,
+          flex: 1,
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -216,7 +234,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ),
         Expanded(
-          flex: 4,
+          flex: 1,
           child: Container(
             color: Colors.white,
             child: Center(

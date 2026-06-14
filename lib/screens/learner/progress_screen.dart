@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:hango/screens/learner/learner_ui.dart';
 import 'package:hango/theme/app_colors.dart';
-import 'package:hango/widgets/shared_widgets.dart';
 
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
@@ -19,7 +19,7 @@ class ProgressScreen extends StatelessWidget {
       'title': 'Vocabulary Master',
       'description': 'Learn over 500 vocabulary items',
       'icon': Icons.translate_rounded,
-      'color': Color(0xFF8B5CF6),
+      'color': Color(0xFF6366F1),
       'unlocked': true,
     },
     {
@@ -47,105 +47,137 @@ class ProgressScreen extends StatelessWidget {
 
   final List<Map<String, dynamic>> _skills = const [
     {'name': 'Grammar', 'score': 0.85, 'color': Color(0xFF3B82F6)},
-    {'name': 'Vocabulary', 'score': 0.72, 'color': Color(0xFF8B5CF6)},
-    {'name': 'Reading Comprehension', 'score': 0.90, 'color': Color(0xFF10B981)},
+    {'name': 'Vocabulary', 'score': 0.72, 'color': Color(0xFF6366F1)},
+    {
+      'name': 'Reading Comprehension',
+      'score': 0.90,
+      'color': Color(0xFF10B981),
+    },
     {'name': 'Listening', 'score': 0.65, 'color': Color(0xFFF59E0B)},
   ];
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+    return LearnerPageWrapper(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const PageHeader(
+          const LearnerSectionHeader(
             title: 'My Progress',
             subtitle: 'Analyze your current skills and achievements',
           ).animate().fadeIn(duration: 400.ms),
-          const SizedBox(height: 32),
-          // Skill breakdown
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 3,
-                child: AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Skill Breakdown',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _skills.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 20),
-                        itemBuilder: (context, idx) {
-                          final sk = _skills[idx];
-                          return _buildSkillBar(sk);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 24),
-              // Mini stats
-              Expanded(
-                flex: 2,
-                child: Column(
-                  children: [
-                    _buildMiniStat('Total Practice Time', '32.5 hrs', Icons.timer_rounded, AppColors.primary),
-                    const SizedBox(height: 20),
-                    _buildMiniStat('Lessons Completed', '42 lessons', Icons.book_rounded, AppColors.success),
-                  ],
-                ),
-              ),
-            ],
-          ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
-          const SizedBox(height: 40),
-          // Badge Showcase
-          Text(
-            'Badge Showcase',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ).animate().fadeIn(delay: 150.ms),
-          const SizedBox(height: 20),
+          const SizedBox(height: LearnerUi.sectionGap),
           LayoutBuilder(
             builder: (context, constraints) {
-              final cols = constraints.maxWidth > 900 ? 5 : (constraints.maxWidth > 600 ? 3 : 2);
+              final isWide = constraints.maxWidth > 720;
+              final skillsCard = _buildSkillsCard();
+              final statsColumn = _buildStatsColumn();
+
+              if (isWide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: skillsCard),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 2, child: statsColumn),
+                  ],
+                );
+              }
+              return Column(
+                children: [skillsCard, const SizedBox(height: 16), statsColumn],
+              );
+            },
+          ).animate().fadeIn(delay: 80.ms, duration: 400.ms),
+          const SizedBox(height: LearnerUi.sectionGap),
+          Text(
+            'Badge Showcase',
+            style: LearnerUi.sectionTitleStyle,
+          ).animate().fadeIn(delay: 140.ms),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cols = learnerGridColumns(
+                constraints.maxWidth,
+                wide: 5,
+                medium: 3,
+                narrow: 2,
+              );
+              final gap = LearnerUi.cardSpacing.toDouble();
+              final itemWidth =
+                  (constraints.maxWidth - gap * (cols - 1)) / cols;
+
               return Wrap(
-                spacing: 20,
-                runSpacing: 20,
+                spacing: gap,
+                runSpacing: gap,
                 children: _badges.asMap().entries.map((e) {
-                  final badge = e.value;
                   return SizedBox(
-                    width: (constraints.maxWidth - 20 * (cols - 1)) / cols,
-                    child: _buildBadgeCard(badge),
+                    width: itemWidth,
+                    child: _buildBadgeCard(e.value).animate().fadeIn(
+                      delay: (160 + e.key * 50).ms,
+                      duration: 350.ms,
+                    ),
                   );
                 }).toList(),
               );
             },
-          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSkillsCard() {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: LearnerUi.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Skill Breakdown', style: LearnerUi.sectionTitleStyle),
+          const SizedBox(height: 22),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _skills.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 18),
+            itemBuilder: (context, idx) => _buildSkillBar(_skills[idx]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsColumn() {
+    return Column(
+      children: [
+        _buildMiniStat(
+          'Total Practice Time',
+          '32.5 hrs',
+          Icons.timer_rounded,
+          AppColors.primary,
+        ),
+        const SizedBox(height: 14),
+        _buildMiniStat(
+          'Lessons Completed',
+          '42 lessons',
+          Icons.book_rounded,
+          AppColors.success,
+        ),
+        const SizedBox(height: 14),
+        _buildMiniStat(
+          'Current Streak',
+          '7 days',
+          Icons.local_fire_department_rounded,
+          const Color(0xFFF59E0B),
+        ),
+      ],
     );
   }
 
   Widget _buildSkillBar(Map<String, dynamic> skill) {
     final double score = skill['score'] as double;
     final Color color = skill['color'] as Color;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -164,7 +196,7 @@ class ProgressScreen extends StatelessWidget {
               '${(score * 100).toInt()}%',
               style: GoogleFonts.inter(
                 fontSize: 14,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
                 color: color,
               ),
             ),
@@ -172,51 +204,53 @@ class ProgressScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
             value: score,
-            backgroundColor: color.withOpacity(0.1),
+            backgroundColor: color.withValues(alpha: 0.1),
             valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 10,
+            minHeight: 8,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMiniStat(String label, String value, IconData icon, Color color) {
-    return AppCard(
+  Widget _buildMiniStat(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: LearnerUi.cardDecoration(elevated: false),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
+          LearnerSurfaceIcon(icon: icon, color: color),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -228,38 +262,38 @@ class ProgressScreen extends StatelessWidget {
     final Color color = badge['color'] as Color;
 
     return Opacity(
-      opacity: unlocked ? 1.0 : 0.45,
-      child: AppCard(
+      opacity: unlocked ? 1.0 : 0.4,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: LearnerUi.cardDecoration(elevated: unlocked),
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                badge['icon'] as IconData,
-                color: color,
-                size: 32,
-              ),
+              child: Icon(badge['icon'] as IconData, color: color, size: 26),
             ),
             const SizedBox(height: 12),
             Text(
               badge['title'] as String,
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w700,
-                fontSize: 14,
+                fontSize: 13,
                 color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               badge['description'] as String,
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: AppColors.textSecondary,
+                height: 1.35,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
