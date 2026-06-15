@@ -318,7 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (role == 'ADMIN') {
                         _navigateTo(const AdminLayout());
                       } else if (role == 'TRAINER') {
-                        _navigateTo(const TrainerLayout());
+                        _navigateTo(TrainerLayout(user: auth));
                       } else {
                         _navigateTo(const LearnerLayout());
                       }

@@ -4,9 +4,13 @@ import com.hango.domain.Role;
 import com.hango.domain.UserAccount;
 import com.hango.domain.UserRole;
 import com.hango.domain.UserRoleJoin;
+import com.hango.domain.Course;
+import com.hango.domain.Exam;
 import com.hango.repository.RoleRepository;
 import com.hango.repository.UserAccountRepository;
 import com.hango.repository.UserRoleJoinRepository;
+import com.hango.repository.CourseRepository;
+import com.hango.repository.ExamRepository;
 import java.util.Optional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +25,8 @@ public class DataInitializer {
       UserAccountRepository users,
       RoleRepository roles,
       UserRoleJoinRepository userRoleJoins,
+      CourseRepository courseRepository,
+      ExamRepository examRepository,
       PasswordEncoder passwordEncoder) {
     return args -> {
       seedRoleIfMissing(roles, UserRole.ADMIN);
@@ -41,7 +47,7 @@ public class DataInitializer {
           roles,
           userRoleJoins,
           passwordEncoder,
-          "Trainer HanGo",
+          "Thao",
           "trainer@hango.local",
           UserRole.TRAINER);
 
@@ -53,6 +59,26 @@ public class DataInitializer {
           "Learner HanGo",
           "learner@hango.local",
           UserRole.LEARNER);
+
+      // Seed Course and Exam if empty
+      if (courseRepository.count() == 0) {
+        users.findByEmailIgnoreCase("trainer@hango.local").ifPresent(thao -> {
+          Course course = new Course();
+          course.setTitle("Grammar 8+");
+          course.setCategory("Grammar");
+          course.setLevel("Advanced");
+          course.setStatus("Published");
+          course.setLessonsCount(1);
+          course.setLearnersCount(4);
+          course.setTrainer(thao);
+          courseRepository.save(course);
+
+          Exam exam = new Exam();
+          exam.setTitle("Grammar 8+ Entrance Test");
+          exam.setTrainer(thao);
+          examRepository.save(exam);
+        });
+      }
     };
   }
 
