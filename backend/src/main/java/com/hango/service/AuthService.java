@@ -88,9 +88,18 @@ public class AuthService {
       throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
     }
 
-    // Role join table phần này hiện chưa sẵn sàng cho entity đang dùng.
-    // Tạm thời default LEARNER để đảm bảo đăng ký/đăng nhập ghi DB hoạt động.
-    return AccountMapper.toAuthResponse(user, UserRole.LEARNER, user.isActive());
+    // Lấy role từ bảng join user_roles
+    UserRoleJoin join =
+        userRoleJoinRepository
+            .findTopByIdUserId(user.getId())
+            .orElseThrow(
+                () ->
+                    new ApiException(
+                        HttpStatus.FORBIDDEN,
+                        "This account does not have a role assigned"));
+
+    UserRole role = join.getRole().getRoleName();
+    return AccountMapper.toAuthResponse(user, role, user.isActive());
 
   }
 
@@ -162,9 +171,27 @@ public class AuthService {
 
   @Transactional(readOnly = true)
   public ApiMessage verifyOtp(VerifyOtpRequest request) {
-    findValidOtp(normalizeEmail(request.email()), request.otp());
+    String email = normalizeEmail(request.email());
+    String otp = request.otp();
+
+    PasswordResetOtp entity =
+        otpRepository
+            .findTopByEmailIgnoreCaseAndUsedFalseOrderByCreatedAtDesc(email)
+            .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid OTP"));
+
+    // Expiration safety
+    if (entity.getExpiresAt() == null || Instant.now().isAfter(entity.getExpiresAt())) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "OTP has expired");
+    }
+
+    // Compare plaintext otp with stored hash
+    if (!passwordEncoder.matches(otp, entity.getOtpHash())) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid OTP");
+    }
+
     return new ApiMessage("OTP is valid");
   }
+
 
   @Transactional
   public ApiMessage resetPassword(ResetPasswordRequest request) {
@@ -175,17 +202,31 @@ public class AuthService {
         userRepository
             .findByEmailIgnoreCase(email)
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No account found for this email"));
+
     user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
     otp.setUsed(true);
 
     return new ApiMessage("Password has been reset");
   }
 
+
   private PasswordResetOtp findValidOtp(String email, String otp) {
-    return otpRepository
-        .findTopByEmailIgnoreCaseAndUsedFalseOrderByCreatedAtDesc(email)
-        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid OTP"));
+    PasswordResetOtp entity =
+        otpRepository
+            .findTopByEmailIgnoreCaseAndUsedFalseOrderByCreatedAtDesc(email)
+            .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid OTP"));
+
+    if (entity.getExpiresAt() == null || Instant.now().isAfter(entity.getExpiresAt())) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "OTP has expired");
+    }
+
+    if (!passwordEncoder.matches(otp, entity.getOtpHash())) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid OTP");
+    }
+
+    return entity;
   }
+
 
   private String normalizeEmail(String email) {
     return email == null ? "" : email.trim().toLowerCase();

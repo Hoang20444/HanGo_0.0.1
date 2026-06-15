@@ -26,6 +26,13 @@ spring:
           auth: true
           starttls:
             enable: true
+  # Cấu hình bảo mật OAuth2 cho Google Login          
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: "628349174226-v41jse8svi532nh3undf32fepqbv8deu.apps.googleusercontent.com"          
 
 app:
   cors:
