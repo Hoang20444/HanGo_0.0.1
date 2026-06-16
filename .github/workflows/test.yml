@@ -7,6 +7,12 @@ on:
 jobs:
   build-backend:
     runs-on: ubuntu-latest
+
+    # Chỉ định đường dẫn chui vào đúng thư mục backend của bạn
+    defaults:
+      run:
+        working-directory: ./backend
+        
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
