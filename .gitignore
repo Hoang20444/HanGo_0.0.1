@@ -1,0 +1,20 @@
+# Chặn thư mục cấu hình máy cá nhân (Theo yêu cầu của Leader)
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Chặn các file build thừa của Flutter/Dart ở thư mục gốc nếu có
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+build/
+
+# Chặn thư mục build của Spring Boot Backend
+backend/target/
+target/
+*.class

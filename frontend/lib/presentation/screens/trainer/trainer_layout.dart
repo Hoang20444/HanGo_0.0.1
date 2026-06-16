@@ -5,23 +5,31 @@ import 'exam_management_screen.dart';
 import 'question_bank_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_sidebar.dart';
+import '../../../data/services/auth_service.dart';
 
 class TrainerLayout extends StatefulWidget {
-  const TrainerLayout({super.key});
+  final AuthUser? user;
+  const TrainerLayout({super.key, this.user});
 
   @override
   State<TrainerLayout> createState() => _TrainerLayoutState();
 }
 
 class _TrainerLayoutState extends State<TrainerLayout> {
-  int _selectedIndex = 1; // Default to Courses
+  int _selectedIndex = 0; // Default to Dashboard
 
-  final List<Widget> _screens = [
-    const TrainerDashboardScreen(),
-    const CourseManagementScreen(),
-    const ExamManagementScreen(),
-    const QuestionBankScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      TrainerDashboardScreen(user: widget.user),
+      const CourseManagementScreen(),
+      const ExamManagementScreen(),
+      const QuestionBankScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
