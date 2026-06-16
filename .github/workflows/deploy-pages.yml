@@ -16,7 +16,6 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-# 🌟 Ép hệ thống dùng Node.js 24 để tắt sạch cảnh báo màu vàng
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -24,35 +23,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # 🌟 CHỈ ĐƯỜNG: Bắt GitHub chui vào đúng thư mục frontend để chạy lệnh
-    defaults:
-      run:
-        working-directory: ./frontend
-
     steps:
+      # Bước 1: Kéo toàn bộ code của Repo về máy ảo
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            frontend
-            
+
+      # Bước 2: Cài đặt môi trường Flutter SDK
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
+      # Bước 3: Cài đặt thư viện (Chạy trực tiếp bên trong thư mục frontend)
       - name: Install dependencies
+        working-directory: ./frontend
         run: flutter pub get
 
+      # Bước 4: Biên dịch ra bản Web (Chạy trực tiếp bên trong thư mục frontend)
       - name: Build web
+        working-directory: ./frontend
         run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
 
+      # Bước 5: Đóng gói và đẩy thư mục web đã build lên bộ nhớ tạm của GitHub
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # 🌟 SỬA ĐƯỜNG DẪN: Chỉ định rõ artifact nằm trong thư mục frontend
-          path: frontend/build/web
+          # ĐƯỜNG DẪN CHÍNH XÁC: Phải trỏ thẳng vào thư mục build nằm trong frontend
+          path: ./frontend/build/web
 
   deploy:
     environment:
@@ -62,6 +60,7 @@ jobs:
     needs: build
 
     steps:
+      # Bước 6: Lấy gói sản phẩm ở Bước 5 và xuất bản lên internet
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
