@@ -71,6 +71,7 @@ public class DataInitializer {
           course.setLessonsCount(1);
           course.setLearnersCount(4);
           course.setTrainer(thao);
+          course.setCreatedBy(thao);
           courseRepository.save(course);
 
           Exam exam = new Exam();

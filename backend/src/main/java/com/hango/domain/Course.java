@@ -106,4 +106,21 @@ public class Course {
   public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
   }
+
+// --- THÊM ĐOẠN NÀY VÀO ---
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "created_by", nullable = false)
+  private UserAccount createdBy;
+  // -------------------------
+
+  // --- THÊM CẢ GETTER / SETTER CHO NÓ XUỐNG DƯỚI CÙNG ---
+  public UserAccount getCreatedBy() {
+      return createdBy;
+  }
+
+  public void setCreatedBy(UserAccount createdBy) {
+      // Tiện tay gán luôn trainer nếu người tạo mặc định là trainer
+      this.createdBy = createdBy; 
+  }
+  // ------------------------------------------------------
 }
