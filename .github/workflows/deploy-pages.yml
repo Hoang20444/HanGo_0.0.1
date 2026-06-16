@@ -16,14 +16,26 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# 🌟 Ép hệ thống dùng Node.js 24 để tắt sạch cảnh báo màu vàng
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    # 🌟 CHỈ ĐƯỜNG: Bắt GitHub chui vào đúng thư mục frontend để chạy lệnh
+    defaults:
+      run:
+        working-directory: ./frontend
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+        with:
+          sparse-checkout: |
+            frontend
+            
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -39,7 +51,8 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build/web
+          # 🌟 SỬA ĐƯỜNG DẪN: Chỉ định rõ artifact nằm trong thư mục frontend
+          path: frontend/build/web
 
   deploy:
     environment:
